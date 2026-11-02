@@ -81,8 +81,8 @@ Run the tests with `.venv/bin/python -m unittest discover -s tests`. A real-brow
 
 The next useful steps are the [phone test](docs/PHONE_TEST.md), repeating the study with a measured iPhone sensitivity curve, and pairing phone photos with spectrometer readings using the [capture protocol](docs/CAPTURE_PROTOCOL.md).
 
-## About this project
+## Credits and license
 
-Built by Patrick Iben with AI coding assistants: started in OpenAI Codex and continued in Claude Code.
+Built with AI coding assistants: started in OpenAI Codex and continued in Claude Code. Author: Patrick Iben.
 
-Code is under the [MIT License](LICENSE). The bundled natural-object table is derived from CC BY 4.0 data; see [docs/DATA.md](docs/DATA.md). To cite this work, see [CITATION.cff](CITATION.cff).
+Code is under the [MIT License](LICENSE). The bundled natural-object table, `myco_fusion/data/natural_objects_27band.csv`, is derived from CC BY 4.0 data, and its [notice](myco_fusion/data/NOTICE.txt) applies instead. See [docs/DATA.md](docs/DATA.md) for every source. To cite this work, see [CITATION.cff](CITATION.cff).
