@@ -10,7 +10,7 @@
 
 ## The short answer
 
-A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. It used a DSLR's measured color curves, because no recent iPhone curve was available.
+A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. The main results use a DSLR's measured color curves, and measured curves from six iPhones, up to the 12 Pro Max, gave similar answers.
 
 The test set is 532 samples of natural objects. The table shows the share meeting both draft targets when held out (spectral angle at most 10°, mean absolute error at most 0.05). The targets are placeholders, not validated limits.
 
@@ -25,7 +25,7 @@ Other findings:
 
 - **Measured spectra are harder than generated ones.** The app's first demo reported a median angle of 2.25° because it tested spectra made by the same model its solver assumes. On measured natural objects the figure is 5.28°, and the worst sample reaches 28°.
 - **Using a screen as extra light added almost nothing at the median.** Adding screen colors to the flash changed median error by 0% (95% interval −3 to 2), though 90th percentile error fell from 0.037 to 0.028. The idea looked much better until a review caught that screen light had been simulated too strong.
-- **The camera's color curves matter.** Swapping one camera's measured curves for another's moved the share meeting both targets from 83% to 56%.
+- **Measured iPhone curves gave results close to the DSLR's.** Six iPhones, up to the 12 Pro Max, gave 84–86% and 61–64% for the first two rows. Other curves can differ: the Sigma SD Merrill's gave 56%. No curve for a newer iPhone was found, so a current iPhone is untested.
 - **A color chart transfers unevenly.** On leaves, chart-only calibration gave 3.8 times the error of a calibration on leaves.
 - **The mushroom data can't answer the mushroom question.** The only public set found covers 250 samples of an unnamed species, and their spectra barely change shape.
 

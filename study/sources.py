@@ -22,6 +22,19 @@ FILES = {
     "Database_Stones.csv": ("https://ndownloader.figshare.com/files/51761981", "e7a369164cf02d92d547a028af121ed2e1959f6c4ded17751716d6117e9a7691"),
     "SpectroFood_dataset.csv": ("https://zenodo.org/api/records/8362947/files/SpectroFood_dataset.csv/content", "7e2f2eb0b44a1e1cfcd580ca2bc13473d22cba0529b175904d43983e31fb707d"),
 }
+# Measured phone sensitivities from Tominaga et al. 2021 (http://ohlab.kic.ac.jp/). The source
+# states no license, so these are downloaded and checked here and never stored in the repository.
+GOOGLE_DOWNLOAD = "https://docs.google.com/uc?export=download&id="
+PHONES = {
+    "iPhone 6s": ("1dQExKthDjb45N7o5T5QWUTeKELxM03AH", "d1511879d1b5c40548805cc46e3a9a53584526c9acdd69ed9d269ba29dda7f93"),
+    "iPhone SE": ("1dMec6PkUiH8Hk38Mp-om-3Dy5j40xtp7", "0dd185167a4d95e861b905880bc0be49e5a7739e3c822450c37afeae18f40e88"),
+    "iPhone 8": ("1dOp0-yXR9MnDbuc5mVOO2izRFkqQICGD", "9a121a8ba49adb74b42eaeffe03efa435ed369baa3f7bb81b46ae0ba6ea82f15"),
+    "iPhone X": ("1dKYksvsFi5BUUA_8aRG4uHUv-eZV-6k9", "63f992d333794e639f4b4f28f44cab8054ebb27acadfa651633d384f81ac71ce"),
+    "iPhone 11": ("1d_lhS5r2uW3JuFV58Bn93hjtV_RLPQoV", "d29a5b62b7015c2f246236d8e2a495ff3c4f1a51512bd60ff8f5cbade9a38bf2"),
+    "iPhone 12 Pro Max": ("1dSuouS7o-7DPx_EgXkNyUijngSVYY8dj", "9bf20d601f38cebb55048c4a0d5135071b5d1651b732f5c03bb68beb98ebc30a"),
+}
+for _phone, (_identifier, _digest) in PHONES.items():
+    FILES[f"phone_curves/{_phone.replace(' ', '_')}.txt"] = (GOOGLE_DOWNLOAD + _identifier, _digest)
 
 
 def fetch(name: str) -> Path:
@@ -29,7 +42,7 @@ def fetch(name: str) -> Path:
     url, expected = FILES[name]
     path = RAW / name
     if not path.exists():
-        RAW.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         with urllib.request.urlopen(url, timeout=120) as response:
             path.write_bytes(response.read())
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -137,6 +150,18 @@ def load_mushrooms() -> dict:
         spectra.append([float(x) for x in row[2:2 + len(wavelengths)]])
     return {"ids": ids, "group": list(ids), "wavelengths": wavelengths, "spectra": np.array(spectra),
             "dry_matter": np.array(dry_matter)}
+
+
+def load_phone_curves() -> dict:
+    """Measured sensitivities as (wavelengths, table) pairs: 400-700 nm, 10 nm steps, 3 columns."""
+    wavelengths = np.arange(400.0, 701.0, 10.0)
+    curves = {}
+    for phone in PHONES:
+        table = np.loadtxt(fetch(f"phone_curves/{phone.replace(' ', '_')}.txt"))
+        if table.shape != (31, 3):
+            raise ValueError(f"{phone}: expected 31 rows and 3 columns, found {table.shape}")
+        curves[phone] = (wavelengths, table)
+    return curves
 
 
 def load_colour_tables() -> dict:

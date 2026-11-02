@@ -53,6 +53,10 @@ class FindingsTests(unittest.TestCase):
                          f"{100 * natural['sigma_camera']['share_within_targets']:.0f}%",
                          f"{self.study['q2']['domains']['Leaves']['ratio']:.1f} times"):
             self.assertIn(expected, readme)
+        phones = self.study["q7"].values()
+        similar = [100 * e["affine"]["share_within_targets"] for e in phones]
+        chart = [100 * e["chart"]["share_within_targets"] for e in phones]
+        self.assertIn(f"{min(similar):.0f}–{max(similar):.0f}% and {min(chart):.0f}–{max(chart):.0f}%", readme)
 
     def test_all_tests_table_reports_failures_too(self):
         outcomes = {row[-1] for row in findings()["all_tests"]["rows"]}

@@ -6,6 +6,8 @@ Each entry was compared with its source on 2026-11-01. "Bearing here" is this pr
 
 **Yeo et al. 2017, [SpeCam](https://make.kaist.ac.kr/project/2017-specam).** Places a phone face down and "uses only the front-facing camera and the display as a multi-spectral light source", identifying 30 surface materials in the authors' study. *Bearing here:* prior art for using a screen as a changing light. This project asks a narrower question, about estimating reflectance, and in simulation found little median gain.
 
+**Tominaga et al. 2021, [Measurement and Estimation of Spectral Sensitivity Functions for Mobile Phone Cameras](https://pmc.ncbi.nlm.nih.gov/articles/PMC8347217/).** Measures the color sensitivities of a range of phones with monochromatic light and publishes them, including six iPhones. *Bearing here:* the source of the iPhone curves in Q7.
+
 **Lin and Finlayson 2020, [Physically Plausible Spectral Reconstruction](https://www.mdpi.com/1424-8220/20/21/6399).** Describes the spectra that give one RGB as a fundamental metamer plus metameric blacks, and builds reconstruction that respects this. *Bearing here:* the reason three channels leave spectral directions unseen.
 
 **Fu et al. 2024, [Limitations of Data-Driven Spectral Reconstruction](https://arxiv.org/abs/2401.03835).** Tests learned RGB-to-spectrum models under "metameric or near-metameric conditions" and argues that published scores overstate real-world performance. *Bearing here:* a reason to keep held-out tests and tail errors in view.

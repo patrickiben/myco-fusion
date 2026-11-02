@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- Repeated the study with measured sensitivities of six iPhones, up to the 12 Pro Max (plan addendum, Q7). Results stayed close to the DSLR's.
+
 ## 0.3.0
 
 - Added a reproducible study on measured spectra, with a plan written before the main results were computed (`study/`, `results/`, `docs/FINDINGS.md`).

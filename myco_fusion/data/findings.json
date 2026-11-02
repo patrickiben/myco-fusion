@@ -2,8 +2,8 @@
  "title": "How far can a phone camera go toward a spectrum?",
  "eyebrow": "FINDINGS · SIMULATION ON MEASURED REFLECTANCE",
  "answer": [
-  "A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. It used a DSLR's measured color curves, because no recent iPhone curve was available.",
-  "With calibration on hundreds of similar objects measured by spectrometer, 83% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, 60% did. When the light changed and nothing corrected for it, 0–34% did, and a white reference card brought that back to 52–59%. Using a screen as an extra light added almost nothing at the median."
+  "A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. The main results use a DSLR's measured color curves, and measured curves from six iPhones, up to the 12 Pro Max, gave similar answers.",
+  "With calibration on hundreds of similar objects measured by spectrometer, 83% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, 60% did. When the light changed and nothing corrected for it, 0–34% did, and a white reference card brought that back to 52–59%. Using a screen as an extra light added almost nothing at the median. With the iPhone curves, the first two figures were 84–86% and 61–64%."
  ],
  "safety": "No phone photo and no wild fungus was tested. Never use this to decide whether a mushroom is safe to eat.",
  "tiles": [
@@ -145,34 +145,195 @@
   },
   {
    "id": "camera",
-   "title": "In this comparison, the camera's color curves moved results more than the model did",
+   "title": "Measured iPhone curves gave results close to the Nikon's",
    "body": [
-    "With the Nikon D5100's measured sensitivities and a linear fit, 83% of samples met both targets. A nonlinear fit raised that to 90%. The Sigma SD Merrill's curves lowered it to 56%. A constant spectrum, the baseline to beat, managed 7%.",
-    "This is only two cameras, and neither is a phone. The Sigma uses a layered Foveon sensor, so treat it as a range check. Measured curves for phones up to the iPhone 12 Pro Max are published but not used here yet, and none was found for newer iPhones, so where a current iPhone lands is unknown."
+    "With the Nikon D5100's measured sensitivities and a linear fit, 83% of samples met both targets, and 60% with chart-only calibration. Measured curves from six iPhones gave 84–86% and 61–64%. The 12 Pro Max, the newest available, gave 85% (95% interval 82–88) and 62%.",
+    "Under the plan's rule, a Nikon conclusion holds if it has the same outcome on at least 5 of the 6 phones. Those on the hard limit, chart transfer and screen light hold. The two per-light conclusions don't hold exactly: the white card cleared the bar under 4 or 5 of 6 lights, and the full chart under 5 or 6, so the pattern is close but not identical.",
+    "Other curves can behave differently. The Sigma SD Merrill, with a layered Foveon sensor, gave 56%. A nonlinear fit on the Nikon gave 90%, and a constant spectrum, the baseline to beat, 7%."
    ],
+   "caveat": "No curve for a phone newer than the 12 Pro Max was found, so a current iPhone is untested. Only the camera curves changed here: the flash is still a stand-in, and real phones also process their images.",
    "chart": {
-    "type": "bars",
-    "title": "Share of samples meeting both targets",
+    "type": "dots",
+    "title": "Share of samples meeting both targets, by camera curves",
     "unit": "%",
     "digits": 0,
+    "min": 0,
     "max": 100,
+    "series": [
+     {
+      "key": "similar",
+      "label": "Calibrated on similar objects"
+     },
+     {
+      "key": "chart",
+      "label": "Color chart only"
+     }
+    ],
     "rows": [
      {
-      "label": "Constant spectrum",
-      "value": 6.578947368421052
+      "label": "Nikon D5100",
+      "values": {
+       "similar": 82.83834586466166,
+       "chart": 60.26315789473685
+      }
      },
      {
-      "label": "Sigma SD Merrill, linear fit",
-      "value": 56.212406015037594
+      "label": "iPhone 6s",
+      "values": {
+       "similar": 84.41729323308272,
+       "chart": 60.50751879699248
+      }
      },
      {
-      "label": "Nikon D5100, linear fit",
-      "value": 82.83834586466166
+      "label": "iPhone SE",
+      "values": {
+       "similar": 86.08082706766918,
+       "chart": 63.52443609022558
+      }
      },
      {
-      "label": "Nikon D5100, nonlinear fit",
-      "value": 90.15977443609022
+      "label": "iPhone 8",
+      "values": {
+       "similar": 83.87218045112782,
+       "chart": 61.118421052631575
+      }
+     },
+     {
+      "label": "iPhone X",
+      "values": {
+       "similar": 84.01315789473685,
+       "chart": 61.78571428571429
+      }
+     },
+     {
+      "label": "iPhone 11",
+      "values": {
+       "similar": 85.0,
+       "chart": 61.82330827067669
+      }
+     },
+     {
+      "label": "iPhone 12 Pro Max",
+      "values": {
+       "similar": 84.65225563909775,
+       "chart": 61.8421052631579
+      }
      }
+    ]
+   },
+   "table": {
+    "title": "Do the Nikon conclusions hold on the iPhones?",
+    "headers": [
+     "Conclusion",
+     "Phones with the same outcome",
+     "At least 5 of 6?"
+    ],
+    "rows": [
+     [
+      "Nonlinear gain stays unresolved against the 10% line",
+      "6 of 6",
+      "Holds"
+     ],
+     [
+      "Chart-only calibration stays past the 20% transfer limit",
+      "6 of 6",
+      "Holds"
+     ],
+     [
+      "Flash plus screen misses the 20% bar, calibrated on similar objects",
+      "6 of 6",
+      "Holds"
+     ],
+     [
+      "Flash plus screen misses the 20% bar, chart only",
+      "6 of 6",
+      "Holds"
+     ],
+     [
+      "White card clears the bar under the same lights as the Nikon",
+      "3 of 6",
+      "Does not hold"
+     ],
+     [
+      "Chart under that light clears the bar under all 6 lights",
+      "1 of 6",
+      "Does not hold"
+     ]
+    ]
+   },
+   "table2": {
+    "title": "Results by iPhone, with the same noise and lights as the Nikon",
+    "headers": [
+     "Phone",
+     "Similar objects",
+     "Chart only",
+     "Light changed, no correction",
+     "White card",
+     "Chart under that light",
+     "Flash plus screen: drop in median MAE (95% interval)",
+     "Nonlinear gain (95% interval)"
+    ],
+    "rows": [
+     [
+      "iPhone 6s",
+      "84%",
+      "61%",
+      "0–42%",
+      "45–58%",
+      "58–63%",
+      "−2% (−4 to 1)",
+      "13% (5 to 19)"
+     ],
+     [
+      "iPhone SE",
+      "86%",
+      "64%",
+      "0–47%",
+      "47–61%",
+      "61–67%",
+      "−1% (−2 to 1)",
+      "15% (7 to 20)"
+     ],
+     [
+      "iPhone 8",
+      "84%",
+      "61%",
+      "1–38%",
+      "47–59%",
+      "60–64%",
+      "0% (−3 to 2)",
+      "13% (5 to 21)"
+     ],
+     [
+      "iPhone X",
+      "84%",
+      "62%",
+      "0–41%",
+      "49–59%",
+      "60–64%",
+      "0% (−2 to 2)",
+      "10% (4 to 18)"
+     ],
+     [
+      "iPhone 11",
+      "85%",
+      "62%",
+      "1–38%",
+      "48–60%",
+      "60–64%",
+      "−1% (−2 to 1)",
+      "13% (5 to 19)"
+     ],
+     [
+      "iPhone 12 Pro Max",
+      "85%",
+      "62%",
+      "0–42%",
+      "49–59%",
+      "60–64%",
+      "−1% (−3 to 1)",
+      "14% (5 to 20)"
+     ]
     ]
    }
   },
@@ -1164,12 +1325,300 @@
     "44% (42 to 46)",
     "At least 20%, interval above 0",
     "Met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "13% (5 to 19)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "Chart MAE over similar-object MAE",
+    "1.41 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "White card against no correction, across 6 lights",
+    "Cleared under 4 of 6",
+    "At least 20%, interval above 0",
+    "4 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "−2% (−4 to 1)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 6s",
+    "Flash plus screen against flash, chart only",
+    "3% (2 to 6)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "15% (7 to 20)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "Chart MAE over similar-object MAE",
+    "1.40 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "White card against no correction, across 6 lights",
+    "Cleared under 4 of 6",
+    "At least 20%, interval above 0",
+    "4 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "−1% (−2 to 1)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone SE",
+    "Flash plus screen against flash, chart only",
+    "2% (0 to 3)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "13% (5 to 21)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "Chart MAE over similar-object MAE",
+    "1.43 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "White card against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 6 of 6",
+    "At least 20%, interval above 0",
+    "6 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "0% (−3 to 2)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 8",
+    "Flash plus screen against flash, chart only",
+    "9% (7 to 11)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "10% (4 to 18)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "Chart MAE over similar-object MAE",
+    "1.46 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "White card against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "0% (−2 to 2)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone X",
+    "Flash plus screen against flash, chart only",
+    "5% (4 to 6)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "13% (5 to 19)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "Chart MAE over similar-object MAE",
+    "1.41 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "White card against no correction, across 6 lights",
+    "Cleared under 4 of 6",
+    "At least 20%, interval above 0",
+    "4 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "−1% (−2 to 1)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 11",
+    "Flash plus screen against flash, chart only",
+    "3% (1 to 5)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "Best nonlinear fit against linear fit (drop in median MAE)",
+    "14% (5 to 20)",
+    "At most 10%",
+    "Unresolved: interval spans 10%"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "Chart MAE over similar-object MAE",
+    "1.41 times",
+    "At most 1.2 times",
+    "Not adequate"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "White card against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "Chart under that light against no correction, across 6 lights",
+    "Cleared under 5 of 6",
+    "At least 20%, interval above 0",
+    "5 of 6"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "Flash plus screen against flash, calibrated on similar objects",
+    "−1% (−3 to 1)",
+    "At least 20%, interval above 0",
+    "Not met"
+   ],
+   [
+    "Q7 iPhones",
+    "iPhone 12 Pro Max",
+    "Flash plus screen against flash, chart only",
+    "1% (−1 to 2)",
+    "At least 20%, interval above 0",
+    "Not met"
    ]
   ]
  },
  "limits_title": "What this does not show",
  "limits": [
-  "No phone photo was used. RGB values are simulated from the measured curves of two other cameras.",
+  "No phone photo was used. RGB values are simulated from the measured curves of two DSLRs and six iPhones, none newer than the 12 Pro Max.",
   "The noise model is simple. It leaves out clipping, tone mapping, uneven light, gloss and viewing angle, so real results should be expected to be worse.",
   "Calibrating on similar objects takes hundreds of spectrometer readings, which most people do not have.",
   "The spectra come from specific collections: natural objects from one region of Argentina, and mushrooms of an unnamed species. Other materials may behave differently.",
@@ -1181,7 +1630,7 @@
  "next_title": "What would settle more of this",
  "next": [
   "Run the phone test. It needs no purchase and measures how stable a real phone is. It may also show whether screen light adds real measurements, though the simulation says that needs many objects.",
-  "Repeat this study with measured phone sensitivity curves.",
+  "Measure a current iPhone's color curves and its flash spectrum, and repeat this study with them.",
   "Pair phone photos with spectrometer readings of the same marked spots, starting with stable matte targets. Only that can test spectral accuracy."
  ],
  "plan_note": "The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. No human expert has reviewed this work yet.",
@@ -1203,7 +1652,11 @@
    "url": "https://make.kaist.ac.kr/project/2017-specam"
   },
   {
-   "label": "colour-science, for chart, camera, illuminant and display curves",
+   "label": "Tominaga et al. 2021, measured phone camera sensitivities",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8347217/"
+  },
+  {
+   "label": "colour-science, for chart, DSLR, illuminant and display curves",
    "url": "https://www.colour-science.org/"
   }
  ],

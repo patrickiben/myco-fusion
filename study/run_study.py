@@ -12,7 +12,7 @@ from myco_fusion.intervals import chi2_quantile
 from .pipeline import (ALPHAS, METRIC_NM, NOISE, SIM_NM, Evaluation, camera_curves, capture, capture_arm, cv_predict,
                        errors, fit_selected, gaussian_light, group_folds, light_curve, match_exposure, operator_rank,
                        paired_reduction, resample, share_bootstrap)
-from .sources import load_colour_tables, load_mushrooms, load_natural_objects
+from .sources import load_colour_tables, load_mushrooms, load_natural_objects, load_phone_curves
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED = 20261101
@@ -337,6 +337,63 @@ def question_5(natural, mushrooms, camera, flash, screen, noise, factor=3.0):
     return out
 
 
+def question_7(natural, chart, phones, flash, noise, shift_curves, screen):
+    """Repeat the natural-object tests for each phone (see the plan's addendum)."""
+    out = {}
+    for phone, camera in phones.items():
+        def one_photo(spectra, rng, camera=camera):
+            return capture(spectra, flash, camera, noise, rng)
+        affine = run_cv(natural, one_photo, f"{phone}-one-photo")
+        kernel = run_cv(natural, one_photo, f"{phone}-one-photo", "kernel")
+        polynomial = run_cv(natural, one_photo, f"{phone}-one-photo", "polynomial")
+        best_name, best = min((("polynomial", polynomial), ("kernel", kernel)), key=lambda item: np.median(item[1].mae))
+        gain = paired_reduction(affine.mae, best.mae, natural.groups, rng_for("boot-q7", phone), statistic="ratio")
+        chart_eval = run_chart(chart, natural, one_photo, f"{phone}-transfer")
+        entry = {
+            "affine": with_share_interval(affine, natural.groups, phone, "affine"),
+            "best_nonlinear": best_name, "best_nonlinear_summary": best.summary(), "nonlinear_gain": gain,
+            "limit_holds": bool(gain["percent"] <= 10), "limit_resolved": bool(not gain["low"] <= 10 <= gain["high"]),
+            "chart": with_share_interval(chart_eval, natural.groups, phone, "chart"),
+            "chart_transfer_ratio": chart_eval.summary()["mae_median"] / affine.summary()["mae_median"],
+        }
+        white = chart.names.index("white 9.5 (.05 D)") if "white 9.5 (.05 D)" in chart.names else 18
+        lights = {}
+        for name, curve in shift_curves.items():
+            light = match_exposure(curve, flash, camera)
+            sams = {key: [] for key in ("none", "white_patch", "chart_under_test_light")}
+            maes = {key: [] for key in sams}
+            for draw in range(DRAWS):
+                rng = rng_for(phone, "shift", name, draw)
+                chart_flash = capture(chart.sim, flash, camera, noise, rng)
+                chart_test = capture(chart.sim, light, camera, noise, rng)
+                test = capture(natural.sim, light, camera, noise, rng)
+                base = fit_selected(chart_flash, chart.metric, chart.groups, rng)
+                retrained = fit_selected(chart_test, chart.metric, chart.groups, rng)
+                gains = chart_flash[white] / chart_test[white]
+                estimates = {"none": base.predict(test), "white_patch": base.predict(test * gains), "chart_under_test_light": retrained.predict(test)}
+                for key, estimate in estimates.items():
+                    sam, mae = errors(natural.metric, estimate)
+                    sams[key].append(sam); maes[key].append(mae)
+            evaluations = {key: Evaluation(sams[key], maes[key]) for key in sams}
+            row = {key: evaluation.summary() for key, evaluation in evaluations.items()}
+            for key in ("white_patch", "chart_under_test_light"):
+                reduction = paired_reduction(evaluations["none"].mae, evaluations[key].mae, natural.groups, rng_for("boot-q7", phone, name, key))
+                reduction["helps"] = bool(reduction["low"] > 0 and reduction["percent"] >= 20)
+                row[f"{key}_reduction"] = reduction
+            lights[name] = row
+        entry["lights"] = lights
+        primaries = [(match_exposure(curve, flash, camera), 3.0) for curve in screen]
+        all_lights = [(flash, 1.0), *primaries]
+        for label, runner, base_eval in (("similar_objects", lambda name: run_cv(natural, lambda s, r: capture_arm(s, all_lights, camera, noise, r), name), affine),
+                                         ("chart_only", lambda name: run_chart(chart, natural, lambda s, r: capture_arm(s, all_lights, camera, noise, r), name), chart_eval)):
+            arm = runner(f"{phone}-flash-screen")
+            reduction = paired_reduction(base_eval.mae, arm.mae, natural.groups, rng_for("boot-q7-arm", phone, label))
+            reduction["helps"] = bool(reduction["low"] > 0 and reduction["percent"] >= 20)
+            entry[f"flash_plus_screen_{label}"] = {**arm.summary(), "reduction_vs_flash": reduction, "independent_directions": operator_rank(all_lights, camera)}
+        out[phone] = entry
+    return out
+
+
 def main():
     tables = load_colour_tables()
     raw_natural = load_natural_objects()
@@ -388,6 +445,9 @@ def main():
     results["q4"] = question_4(natural, mushrooms, chart, cameras, flashes, d65, screens, NOISE, kept)
     print("Q5 ...", flush=True)
     results["q5"] = question_5(natural, mushrooms, camera, flash, screens["medium"], noise)
+    print("Q7 ...", flush=True)
+    phones = {name: camera_curves(*pair) for name, pair in load_phone_curves().items()}
+    results["q7"] = question_7(natural, chart, phones, flash, noise, shift_curves, screens["medium"])
     out = ROOT / "results" / "study.json"
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(results, indent=1, allow_nan=False) + "\n")

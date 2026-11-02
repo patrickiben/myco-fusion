@@ -67,6 +67,23 @@ Median, 90th percentile and worst spectral angle and mean absolute error (MAE), 
 
 **Q6. Do the app's intervals mean what they say?** Simulation of specimens nested in sessions, with the original percentile-bootstrap methods against exact order-statistic intervals. Sample sizes: 3 to 40 specimens, 2 to 20 sessions. Scenarios: lognormal with session share of variance 36%, smaller session share, heavier-tailed session effects, and unequal session sizes.
 
+## Addendum: measured iPhone curves (Q7)
+
+Added on 2026-11-01, after every result above and before any result with these curves. It does not change Q1 to Q6.
+
+**Question.** Do the Nikon conclusions hold with measured iPhone sensitivities?
+
+**Curves.** iPhone 6s, SE, 8, X, 11 and 12 Pro Max from Tominaga et al. 2021, measured at 400 to 700 nm in 10 nm steps. The source states no license, so they are downloaded with a hash check and never stored in this repository. No curve for a newer iPhone was found.
+
+**Design.** Natural objects only, with the same noise, flash stand-in, folds, lights and screen colors as above. Each light is exposed to match flash on a white target for that phone. For each phone:
+
+- One photo, calibrated on similar objects: share meeting both targets and median MAE, plus the nonlinear gain against the 10% rule.
+- One photo, chart only: share and median MAE.
+- Changed light on chart calibration: no correction, white card, chart under that light, with the 20% bar counted across the six lights.
+- Flash plus the medium screen colors against flash, under both calibrations, against the 20% bar.
+
+**What counts as an answer.** A Nikon conclusion holds for phones if it has the same outcome under the same rule on at least five of the six phones. The 12 Pro Max is reported on its own as the newest available. The flash is still a stand-in, so this tests the camera curves only.
+
 ## Deviations
 
 Added before the first run, with no results seen:

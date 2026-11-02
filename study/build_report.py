@@ -20,7 +20,8 @@ SOURCES = [
     {"label": "Malounas et al. 2024, SpectroFood dataset", "url": "https://doi.org/10.1016/j.dib.2024.110040"},
     {"label": "He et al. 2023, SpeCamX", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10545193/"},
     {"label": "Yeo et al. 2017, SpeCam", "url": "https://make.kaist.ac.kr/project/2017-specam"},
-    {"label": "colour-science, for chart, camera, illuminant and display curves", "url": "https://www.colour-science.org/"},
+    {"label": "Tominaga et al. 2021, measured phone camera sensitivities", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8347217/"},
+    {"label": "colour-science, for chart, DSLR, illuminant and display curves", "url": "https://www.colour-science.org/"},
 ]
 
 
@@ -70,12 +71,37 @@ def check_claims(s, c):
         "most above-target look-alikes include a dark patch": q5["of_those_with_a_dark_patch"] > 0.9 * q5["look_alike_above_a_draft_target"],
         "screen light separates few look-alikes": q5["share_separated"] < 0.1,
         "the example pair is the plum and the tourmaline": {q5["example_pair"]["a"]["object"], q5["example_pair"]["b"]["object"]} == {"Prunus domestica", "Black Tourmaline. Brazil"},
+        "phone shares sit close to the Nikon's": all(abs(e["affine"]["share_within_targets"] - natural["affine"]["share_within_targets"]) < 0.05 and abs(e["chart"]["share_within_targets"] - s["q2"]["natural_all"]["chart"]["share_within_targets"]) < 0.05 for e in s["q7"].values()),
+        "the Nikon conclusions on limit, transfer and screen light hold on phones": all(row[2] == "Holds" for row in phone_conclusions(s)[:4]),
+        "the two per-light conclusions do not hold exactly on phones": all(row[2] == "Does not hold" for row in phone_conclusions(s)[4:]),
+        "white card clears the bar under 4 or 5 lights on every phone": all(sum(r["white_patch_reduction"]["helps"] for r in e["lights"].values()) in (4, 5) for e in s["q7"].values()),
+        "chart under the light clears 5 or 6 lights on every phone": all(sum(r["chart_under_test_light_reduction"]["helps"] for r in e["lights"].values()) in (5, 6) for e in s["q7"].values()),
         "session bootstrap is well below 95% with 3 sessions": c["sessions"]["session share 36%"][1]["session_bootstrap_coverage"] < 0.8,
         "exact intervals match their stated level": all(abs(r["exact_coverage"] - r["exact_stated_level"]) < 0.03 for r in c["sessions"]["session share 36%"]),
     }
     failed = [claim for claim, holds in checks.items() if not holds]
     if failed:
         raise SystemExit("Results no longer support: " + "; ".join(failed))
+
+
+def phone_conclusions(s):
+    """Does each Nikon conclusion hold on at least five of the six phones, under the same rule?"""
+    phones = s["q7"]
+    nikon = s["q3"]["natural"]["lights"]
+    nikon_white = {name for name, row in nikon.items() if row["white_patch_reduction"]["helps"]}
+    tests = [
+        ("Nonlinear gain stays unresolved against the 10% line", lambda e: not e["limit_resolved"]),
+        ("Chart-only calibration stays past the 20% transfer limit", lambda e: e["chart_transfer_ratio"] > 1.2),
+        ("Flash plus screen misses the 20% bar, calibrated on similar objects", lambda e: not e["flash_plus_screen_similar_objects"]["reduction_vs_flash"]["helps"]),
+        ("Flash plus screen misses the 20% bar, chart only", lambda e: not e["flash_plus_screen_chart_only"]["reduction_vs_flash"]["helps"]),
+        ("White card clears the bar under the same lights as the Nikon", lambda e: {name for name, row in e["lights"].items() if row["white_patch_reduction"]["helps"]} == nikon_white),
+        ("Chart under that light clears the bar under all 6 lights", lambda e: all(row["chart_under_test_light_reduction"]["helps"] for row in e["lights"].values())),
+    ]
+    rows = []
+    for label, test in tests:
+        count = sum(bool(test(entry)) for entry in phones.values())
+        rows.append([label, f"{count} of {len(phones)}", "Holds" if count >= 5 else "Does not hold"])
+    return rows
 
 
 ARM_LABELS = {
@@ -118,6 +144,16 @@ def all_tests_table(s):
                 rows.append(["Q4 extra lights", f"{DATASET_LABELS[dataset]}, {calibration}", f"{label} against flash", drop_text(reduction), "At least 20%, interval above 0", "Met" if reduction["helps"] else "Not met"])
     for name, row in s["q4"]["sensitivity"].items():
         rows.append(["Q4 sensitivity", "Natural objects", f"Flash plus screen against flash, {name}", drop_text(row["reduction"]), "At least 20%, interval above 0", "Met" if row["reduction"]["helps"] else "Not met"])
+    for phone, entry in s["q7"].items():
+        gain = entry["nonlinear_gain"]
+        rows.append(["Q7 iPhones", phone, "Best nonlinear fit against linear fit (drop in median MAE)", drop_text(gain), "At most 10%", "Limit holds" if entry["limit_holds"] and entry["limit_resolved"] else "Limit fails" if entry["limit_resolved"] else "Unresolved: interval spans 10%"])
+        rows.append(["Q7 iPhones", phone, "Chart MAE over similar-object MAE", f"{entry['chart_transfer_ratio']:.2f} times", "At most 1.2 times", "Adequate" if entry["chart_transfer_ratio"] <= 1.2 else "Not adequate"])
+        for key, label in (("white_patch", "White card"), ("chart_under_test_light", "Chart under that light")):
+            cleared = sum(row[f"{key}_reduction"]["helps"] for row in entry["lights"].values())
+            rows.append(["Q7 iPhones", phone, f"{label} against no correction, across 6 lights", f"Cleared under {cleared} of 6", "At least 20%, interval above 0", f"{cleared} of 6"])
+        for key, label in (("similar_objects", "calibrated on similar objects"), ("chart_only", "chart only")):
+            reduction = entry[f"flash_plus_screen_{key}"]["reduction_vs_flash"]
+            rows.append(["Q7 iPhones", phone, f"Flash plus screen against flash, {label}", drop_text(reduction), "At least 20%, interval above 0", "Met" if reduction["helps"] else "Not met"])
     return {"title": "Every pre-stated test, whatever the result",
             "note": "Drops are the median per-sample drop in MAE as a percent of the baseline median, with a 95% cluster bootstrap interval. Q1 uses the drop in the median itself, as its rule is written. A negative drop means the arm did worse.",
             "headers": ["Question", "Test set", "Comparison", "Result (95% interval)", "Rule", "Outcome"], "rows": rows}
@@ -157,13 +193,21 @@ def build(s, c):
     if pair["a"]["object"] != "Prunus domestica":
         name_a, name_b = name_b, name_a
     sens = lambda key: sensitivity[key]["reduction"]["percent"]
+    phones = s["q7"]
+    newest = phones["iPhone 12 Pro Max"]
+    phone_similar = [e["affine"]["share_within_targets"] for e in phones.values()]
+    phone_chart = [e["chart"]["share_within_targets"] for e in phones.values()]
+    phone_white = [sum(r["white_patch_reduction"]["helps"] for r in e["lights"].values()) for e in phones.values()]
+    phone_full = [sum(r["chart_under_test_light_reduction"]["helps"] for r in e["lights"].values()) for e in phones.values()]
+    span = lambda values, f=pct: f"{f(min(values))}–{f(max(values))}"
+    light_range = lambda e, key: span([r[key]["share_within_targets"] for r in e["lights"].values()])
 
     data = {
         "title": "How far can a phone camera go toward a spectrum?",
         "eyebrow": "FINDINGS · SIMULATION ON MEASURED REFLECTANCE",
         "answer": [
-            "A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. It used a DSLR's measured color curves, because no recent iPhone curve was available.",
-            f"With calibration on hundreds of similar objects measured by spectrometer, {pct(natural['affine']['share_within_targets'])}% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, {pct(q2['natural_all']['chart']['share_within_targets'])}% did. When the light changed and nothing corrected for it, {pct(min(none_shares))}–{pct(max(none_shares))}% did, and a white reference card brought that back to {pct(min(white_shares))}–{pct(max(white_shares))}%. Using a screen as an extra light added almost nothing at the median.",
+            "A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. The main results use a DSLR's measured color curves, and measured curves from six iPhones, up to the 12 Pro Max, gave similar answers.",
+            f"With calibration on hundreds of similar objects measured by spectrometer, {pct(natural['affine']['share_within_targets'])}% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, {pct(q2['natural_all']['chart']['share_within_targets'])}% did. When the light changed and nothing corrected for it, {pct(min(none_shares))}–{pct(max(none_shares))}% did, and a white reference card brought that back to {pct(min(white_shares))}–{pct(max(white_shares))}%. Using a screen as an extra light added almost nothing at the median. With the iPhone curves, the first two figures were {span(phone_similar)}% and {span(phone_chart)}%.",
         ],
         "safety": "No phone photo and no wild fungus was tested. Never use this to decide whether a mushroom is safe to eat.",
         "tiles": [
@@ -203,14 +247,27 @@ def build(s, c):
             },
             {
                 "id": "camera",
-                "title": "In this comparison, the camera's color curves moved results more than the model did",
+                "title": "Measured iPhone curves gave results close to the Nikon's",
                 "body": [
-                    f"With the Nikon D5100's measured sensitivities and a linear fit, {pct(natural['affine']['share_within_targets'])}% of samples met both targets. A nonlinear fit raised that to {pct(natural['kernel']['share_within_targets'])}%. The Sigma SD Merrill's curves lowered it to {pct(natural['sigma_camera']['share_within_targets'])}%. A constant spectrum, the baseline to beat, managed {pct(natural['constant_baseline']['share_within_targets'])}%.",
-                    "This is only two cameras, and neither is a phone. The Sigma uses a layered Foveon sensor, so treat it as a range check. Measured curves for phones up to the iPhone 12 Pro Max are published but not used here yet, and none was found for newer iPhones, so where a current iPhone lands is unknown.",
+                    f"With the Nikon D5100's measured sensitivities and a linear fit, {pct(natural['affine']['share_within_targets'])}% of samples met both targets, and {pct(q2['natural_all']['chart']['share_within_targets'])}% with chart-only calibration. Measured curves from six iPhones gave {span(phone_similar)}% and {span(phone_chart)}%. The 12 Pro Max, the newest available, gave {pct(newest['affine']['share_within_targets'])}% (95% interval {pct(newest['affine']['share_interval']['low'])}–{pct(newest['affine']['share_interval']['high'])}) and {pct(newest['chart']['share_within_targets'])}%.",
+                    f"Under the plan's rule, a Nikon conclusion holds if it has the same outcome on at least 5 of the 6 phones. Those on the hard limit, chart transfer and screen light hold. The two per-light conclusions don't hold exactly: the white card cleared the bar under {min(phone_white)} or {max(phone_white)} of 6 lights, and the full chart under {min(phone_full)} or {max(phone_full)}, so the pattern is close but not identical.",
+                    f"Other curves can behave differently. The Sigma SD Merrill, with a layered Foveon sensor, gave {pct(natural['sigma_camera']['share_within_targets'])}%. A nonlinear fit on the Nikon gave {pct(natural['kernel']['share_within_targets'])}%, and a constant spectrum, the baseline to beat, {pct(natural['constant_baseline']['share_within_targets'])}%.",
                 ],
+                "caveat": "No curve for a phone newer than the 12 Pro Max was found, so a current iPhone is untested. Only the camera curves changed here: the flash is still a stand-in, and real phones also process their images.",
                 "chart": {
-                    "type": "bars", "title": "Share of samples meeting both targets", "unit": "%", "digits": 0, "max": 100,
-                    "rows": [{"label": "Constant spectrum", "value": 100 * natural["constant_baseline"]["share_within_targets"]}, {"label": "Sigma SD Merrill, linear fit", "value": 100 * natural["sigma_camera"]["share_within_targets"]}, {"label": "Nikon D5100, linear fit", "value": 100 * natural["affine"]["share_within_targets"]}, {"label": "Nikon D5100, nonlinear fit", "value": 100 * natural["kernel"]["share_within_targets"]}],
+                    "type": "dots", "title": "Share of samples meeting both targets, by camera curves", "unit": "%", "digits": 0, "min": 0, "max": 100,
+                    "series": [{"key": "similar", "label": "Calibrated on similar objects"}, {"key": "chart", "label": "Color chart only"}],
+                    "rows": [{"label": "Nikon D5100", "values": {"similar": 100 * natural["affine"]["share_within_targets"], "chart": 100 * q2["natural_all"]["chart"]["share_within_targets"]}}] + [{"label": phone, "values": {"similar": 100 * e["affine"]["share_within_targets"], "chart": 100 * e["chart"]["share_within_targets"]}} for phone, e in phones.items()],
+                },
+                "table": {
+                    "title": "Do the Nikon conclusions hold on the iPhones?",
+                    "headers": ["Conclusion", "Phones with the same outcome", "At least 5 of 6?"],
+                    "rows": phone_conclusions(s),
+                },
+                "table2": {
+                    "title": "Results by iPhone, with the same noise and lights as the Nikon",
+                    "headers": ["Phone", "Similar objects", "Chart only", "Light changed, no correction", "White card", "Chart under that light", "Flash plus screen: drop in median MAE (95% interval)", "Nonlinear gain (95% interval)"],
+                    "rows": [[phone, f"{pct(e['affine']['share_within_targets'])}%", f"{pct(e['chart']['share_within_targets'])}%", f"{light_range(e, 'none')}%", f"{light_range(e, 'white_patch')}%", f"{light_range(e, 'chart_under_test_light')}%", drop_text(e['flash_plus_screen_similar_objects']['reduction_vs_flash']), drop_text(e['nonlinear_gain'])] for phone, e in phones.items()],
                 },
             },
             {
@@ -302,7 +359,7 @@ def build(s, c):
         "all_tests": all_tests_table(s),
         "limits_title": "What this does not show",
         "limits": [
-            "No phone photo was used. RGB values are simulated from the measured curves of two other cameras.",
+            "No phone photo was used. RGB values are simulated from the measured curves of two DSLRs and six iPhones, none newer than the 12 Pro Max.",
             "The noise model is simple. It leaves out clipping, tone mapping, uneven light, gloss and viewing angle, so real results should be expected to be worse.",
             "Calibrating on similar objects takes hundreds of spectrometer readings, which most people do not have.",
             "The spectra come from specific collections: natural objects from one region of Argentina, and mushrooms of an unnamed species. Other materials may behave differently.",
@@ -314,7 +371,7 @@ def build(s, c):
         "next_title": "What would settle more of this",
         "next": [
             "Run the phone test. It needs no purchase and measures how stable a real phone is. It may also show whether screen light adds real measurements, though the simulation says that needs many objects.",
-            "Repeat this study with measured phone sensitivity curves.",
+            "Measure a current iPhone's color curves and its flash spectrum, and repeat this study with them.",
             "Pair phone photos with spectrometer readings of the same marked spots, starting with stable matte targets. Only that can test spectral accuracy.",
         ],
         "plan_note": "The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. No human expert has reviewed this work yet.",
@@ -359,8 +416,9 @@ def write_markdown(data):
             table = chart_table(finding["chart"])
             if table:
                 parts += [f"*{finding['chart']['title']}*", "", table, ""]
-        if "table" in finding:
-            parts += [f"*{finding['table']['title']}*", "", markdown_table(finding["table"]["headers"], finding["table"]["rows"]), ""]
+        for key in ("table", "table2"):
+            if key in finding:
+                parts += [f"*{finding[key]['title']}*", "", markdown_table(finding[key]["headers"], finding[key]["rows"]), ""]
         if finding.get("caveat"):
             parts += [f"*Caveat: {finding['caveat']}*", ""]
     tests = data["all_tests"]

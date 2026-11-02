@@ -242,6 +242,7 @@
         pending.push([holder, finding.chart]);
       }
       if (finding.table) article.append(dataTable(finding.table));
+      if (finding.table2) article.append(dataTable(finding.table2));
       if (finding.caveat) article.append(el('p', 'microcopy finding-caveat', finding.caveat));
       list.append(article);
     });
