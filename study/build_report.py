@@ -198,7 +198,7 @@ def build(s, c):
                 ],
                 "chart": {
                     "type": "bars", "title": "Median spectral angle, one photo under flash", "unit": "°", "digits": 2,
-                    "rows": [{"label": "First demo: generated spectra", "value": original["median_sam_deg"]}, {"label": "Natural objects, measured", "value": natural["affine"]["sam_median"]}, {"label": "Mixed set, measured", "value": mixed["affine"]["sam_median"]}],
+                    "rows": [{"label": "First demo: generated spectra", "value": round(original["median_sam_deg"], 6)}, {"label": "Natural objects, measured", "value": natural["affine"]["sam_median"]}, {"label": "Mixed set, measured", "value": mixed["affine"]["sam_median"]}],
                 },
             },
             {
