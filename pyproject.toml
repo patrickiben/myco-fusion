@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myco-fusion"
+version = "0.3.0"
+description = "How far can a phone camera go toward a reflectance spectrum? A research workbench and a reproducible study on measured spectra."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Patrick Iben" }]
+dependencies = ["numpy>=1.26,<3"]
+
+[project.optional-dependencies]
+study = ["colour-science>=0.4.6"]
+
+[project.scripts]
+myco-fusion = "myco_fusion.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["myco_fusion*"]
+
+[tool.setuptools.package-data]
+myco_fusion = ["app/*", "data/*"]

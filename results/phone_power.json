@@ -1,0 +1,88 @@
+{
+ "seed": 20261101,
+ "replicates": 30,
+ "design": "3 sessions, 3 repeats, flash plus 3 screen colors; additive noise 0.005, gain error 2%, screen noise x3; lights exposure-matched to flash; one control adds 3% object-by-session drift",
+ "rows": [
+  {
+   "n_objects": 10,
+   "flash_only": {
+    "min": 2,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "all_lights": {
+    "min": 3,
+    "median": 3.0,
+    "max": 4,
+    "share_above_3": 0.16666666666666666
+   },
+   "control_three_dimensional": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "control_with_placement_drift": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   }
+  },
+  {
+   "n_objects": 20,
+   "flash_only": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "all_lights": {
+    "min": 3,
+    "median": 3.0,
+    "max": 4,
+    "share_above_3": 0.4
+   },
+   "control_three_dimensional": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "control_with_placement_drift": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   }
+  },
+  {
+   "n_objects": 30,
+   "flash_only": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "all_lights": {
+    "min": 3,
+    "median": 4.0,
+    "max": 4,
+    "share_above_3": 0.6
+   },
+   "control_three_dimensional": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   },
+   "control_with_placement_drift": {
+    "min": 3,
+    "median": 3.0,
+    "max": 3,
+    "share_above_3": 0.0
+   }
+  }
+ ]
+}

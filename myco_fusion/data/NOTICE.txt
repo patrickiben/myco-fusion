@@ -1,0 +1,8 @@
+natural_objects_27band.csv is derived from:
+
+Gutiérrez, A. et al. Spectral dataset of natural objects' reflectance from the Southern
+cone of South America. Scientific Data 12, 594 (2025). Dataset on Figshare:
+https://doi.org/10.6084/m9.figshare.25705380.v4. License: CC BY 4.0.
+
+Changes: repeat measurements averaged per sample, interpolated to 420-680 nm in 10 nm
+steps, clipped to [0, 1], and one color label's spelling corrected.

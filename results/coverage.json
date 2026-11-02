@@ -1,0 +1,388 @@
+{
+ "seed": 20261101,
+ "simulations": 2000,
+ "bootstrap_resamples": 1000,
+ "scenarios": {
+  "session share 36%": {
+   "session_sd": 0.3,
+   "specimen_sd": 0.4,
+   "session_distribution": "normal"
+  },
+  "session share 6%": {
+   "session_sd": 0.1,
+   "specimen_sd": 0.4,
+   "session_distribution": "normal"
+  },
+  "heavy-tailed session effects": {
+   "session_sd": 0.3,
+   "specimen_sd": 0.4,
+   "session_distribution": "t3"
+  },
+  "unequal session sizes": {
+   "session_sd": 0.3,
+   "specimen_sd": 0.4,
+   "session_distribution": "normal",
+   "unequal": true
+  }
+ },
+ "independent_specimens": [
+  {
+   "n_specimens": 3,
+   "bootstrap_coverage": 0.75,
+   "exact_coverage": 0.75,
+   "exact_stated_level": 0.75
+  },
+  {
+   "n_specimens": 4,
+   "bootstrap_coverage": 0.864,
+   "exact_coverage": 0.864,
+   "exact_stated_level": 0.875
+  },
+  {
+   "n_specimens": 5,
+   "bootstrap_coverage": 0.9325,
+   "exact_coverage": 0.9325,
+   "exact_stated_level": 0.9375
+  },
+  {
+   "n_specimens": 6,
+   "bootstrap_coverage": 0.94,
+   "exact_coverage": 0.9715,
+   "exact_stated_level": 0.96875
+  },
+  {
+   "n_specimens": 8,
+   "bootstrap_coverage": 0.9145,
+   "exact_coverage": 0.994,
+   "exact_stated_level": 0.9921875
+  },
+  {
+   "n_specimens": 10,
+   "bootstrap_coverage": 0.9365,
+   "exact_coverage": 0.9795,
+   "exact_stated_level": 0.978515625
+  },
+  {
+   "n_specimens": 15,
+   "bootstrap_coverage": 0.931,
+   "exact_coverage": 0.9625,
+   "exact_stated_level": 0.96484375
+  },
+  {
+   "n_specimens": 20,
+   "bootstrap_coverage": 0.9315,
+   "exact_coverage": 0.954,
+   "exact_stated_level": 0.9586105346679688
+  },
+  {
+   "n_specimens": 30,
+   "bootstrap_coverage": 0.933,
+   "exact_coverage": 0.95,
+   "exact_stated_level": 0.9572260547429323
+  },
+  {
+   "n_specimens": 40,
+   "bootstrap_coverage": 0.942,
+   "exact_coverage": 0.9555,
+   "exact_stated_level": 0.9615226917157997
+  }
+ ],
+ "sessions": {
+  "session share 36%": [
+   {
+    "n_sessions": 2,
+    "session_bootstrap_coverage": 0.4955,
+    "specimen_bootstrap_coverage": 0.7795,
+    "exact_coverage": 0.4955,
+    "exact_stated_level": 0.5,
+    "session_bootstrap_median_width": 0.35549381483347436,
+    "exact_median_width": 0.35549381483347436
+   },
+   {
+    "n_sessions": 3,
+    "session_bootstrap_coverage": 0.752,
+    "specimen_bootstrap_coverage": 0.783,
+    "exact_coverage": 0.7535,
+    "exact_stated_level": 0.75,
+    "session_bootstrap_median_width": 0.5889909724506565,
+    "exact_median_width": 0.5920524157923077
+   },
+   {
+    "n_sessions": 4,
+    "session_bootstrap_coverage": 0.823,
+    "specimen_bootstrap_coverage": 0.804,
+    "exact_coverage": 0.872,
+    "exact_stated_level": 0.875,
+    "session_bootstrap_median_width": 0.5561589797337536,
+    "exact_median_width": 0.7297935361456118
+   },
+   {
+    "n_sessions": 5,
+    "session_bootstrap_coverage": 0.8375,
+    "specimen_bootstrap_coverage": 0.826,
+    "exact_coverage": 0.9455,
+    "exact_stated_level": 0.9375,
+    "session_bootstrap_median_width": 0.5301837272365496,
+    "exact_median_width": 0.8304267305170536
+   },
+   {
+    "n_sessions": 6,
+    "session_bootstrap_coverage": 0.8645,
+    "specimen_bootstrap_coverage": 0.8225,
+    "exact_coverage": 0.9715,
+    "exact_stated_level": 0.96875,
+    "session_bootstrap_median_width": 0.5213881980080148,
+    "exact_median_width": 0.9366395874627531
+   },
+   {
+    "n_sessions": 8,
+    "session_bootstrap_coverage": 0.896,
+    "specimen_bootstrap_coverage": 0.8215,
+    "exact_coverage": 0.9925,
+    "exact_stated_level": 0.9921875,
+    "session_bootstrap_median_width": 0.4801195558102926,
+    "exact_median_width": 1.0711870458129913
+   },
+   {
+    "n_sessions": 12,
+    "session_bootstrap_coverage": 0.921,
+    "specimen_bootstrap_coverage": 0.833,
+    "exact_coverage": 0.9645,
+    "exact_stated_level": 0.96142578125,
+    "session_bootstrap_median_width": 0.4013320516185716,
+    "exact_median_width": 0.5756995903773636
+   },
+   {
+    "n_sessions": 20,
+    "session_bootstrap_coverage": 0.939,
+    "specimen_bootstrap_coverage": 0.844,
+    "exact_coverage": 0.967,
+    "exact_stated_level": 0.9586105346679688,
+    "session_bootstrap_median_width": 0.32965303526848744,
+    "exact_median_width": 0.43688216537069946
+   }
+  ],
+  "session share 6%": [
+   {
+    "n_sessions": 2,
+    "session_bootstrap_coverage": 0.494,
+    "specimen_bootstrap_coverage": 0.9095,
+    "exact_coverage": 0.494,
+    "exact_stated_level": 0.5,
+    "session_bootstrap_median_width": 0.2162802631246717,
+    "exact_median_width": 0.2162802631246717
+   },
+   {
+    "n_sessions": 3,
+    "session_bootstrap_coverage": 0.745,
+    "specimen_bootstrap_coverage": 0.8925,
+    "exact_coverage": 0.7455,
+    "exact_stated_level": 0.75,
+    "session_bootstrap_median_width": 0.375062356380552,
+    "exact_median_width": 0.377540681064729
+   },
+   {
+    "n_sessions": 4,
+    "session_bootstrap_coverage": 0.8495,
+    "specimen_bootstrap_coverage": 0.919,
+    "exact_coverage": 0.8825,
+    "exact_stated_level": 0.875,
+    "session_bootstrap_median_width": 0.3692135230186324,
+    "exact_median_width": 0.45920690666635594
+   },
+   {
+    "n_sessions": 5,
+    "session_bootstrap_coverage": 0.8425,
+    "specimen_bootstrap_coverage": 0.9235,
+    "exact_coverage": 0.939,
+    "exact_stated_level": 0.9375,
+    "session_bootstrap_median_width": 0.32955677184990484,
+    "exact_median_width": 0.5301441264041409
+   },
+   {
+    "n_sessions": 6,
+    "session_bootstrap_coverage": 0.8675,
+    "specimen_bootstrap_coverage": 0.917,
+    "exact_coverage": 0.978,
+    "exact_stated_level": 0.96875,
+    "session_bootstrap_median_width": 0.32978136855692397,
+    "exact_median_width": 0.5858044895544545
+   },
+   {
+    "n_sessions": 8,
+    "session_bootstrap_coverage": 0.8925,
+    "specimen_bootstrap_coverage": 0.926,
+    "exact_coverage": 0.994,
+    "exact_stated_level": 0.9921875,
+    "session_bootstrap_median_width": 0.29953581073792745,
+    "exact_median_width": 0.6763849588987281
+   },
+   {
+    "n_sessions": 12,
+    "session_bootstrap_coverage": 0.918,
+    "specimen_bootstrap_coverage": 0.9285,
+    "exact_coverage": 0.964,
+    "exact_stated_level": 0.96142578125,
+    "session_bootstrap_median_width": 0.2590640932618832,
+    "exact_median_width": 0.3690191422074974
+   },
+   {
+    "n_sessions": 20,
+    "session_bootstrap_coverage": 0.919,
+    "specimen_bootstrap_coverage": 0.917,
+    "exact_coverage": 0.9585,
+    "exact_stated_level": 0.9586105346679688,
+    "session_bootstrap_median_width": 0.20473194585285343,
+    "exact_median_width": 0.27708759966841456
+   }
+  ],
+  "heavy-tailed session effects": [
+   {
+    "n_sessions": 2,
+    "session_bootstrap_coverage": 0.4895,
+    "specimen_bootstrap_coverage": 0.823,
+    "exact_coverage": 0.4895,
+    "exact_stated_level": 0.5,
+    "session_bootstrap_median_width": 0.29634575415183534,
+    "exact_median_width": 0.29634575415183534
+   },
+   {
+    "n_sessions": 3,
+    "session_bootstrap_coverage": 0.768,
+    "specimen_bootstrap_coverage": 0.838,
+    "exact_coverage": 0.771,
+    "exact_stated_level": 0.75,
+    "session_bootstrap_median_width": 0.5214004184748373,
+    "exact_median_width": 0.5269879385566685
+   },
+   {
+    "n_sessions": 4,
+    "session_bootstrap_coverage": 0.8275,
+    "specimen_bootstrap_coverage": 0.8535,
+    "exact_coverage": 0.8765,
+    "exact_stated_level": 0.875,
+    "session_bootstrap_median_width": 0.4896186836014372,
+    "exact_median_width": 0.6276755527982347
+   },
+   {
+    "n_sessions": 5,
+    "session_bootstrap_coverage": 0.8335,
+    "specimen_bootstrap_coverage": 0.8625,
+    "exact_coverage": 0.942,
+    "exact_stated_level": 0.9375,
+    "session_bootstrap_median_width": 0.46481249462428786,
+    "exact_median_width": 0.7297839884182351
+   },
+   {
+    "n_sessions": 6,
+    "session_bootstrap_coverage": 0.872,
+    "specimen_bootstrap_coverage": 0.8515,
+    "exact_coverage": 0.97,
+    "exact_stated_level": 0.96875,
+    "session_bootstrap_median_width": 0.45632502575868544,
+    "exact_median_width": 0.806622418923304
+   },
+   {
+    "n_sessions": 8,
+    "session_bootstrap_coverage": 0.894,
+    "specimen_bootstrap_coverage": 0.8645,
+    "exact_coverage": 0.9925,
+    "exact_stated_level": 0.9921875,
+    "session_bootstrap_median_width": 0.41182943555111307,
+    "exact_median_width": 0.9311617874527132
+   },
+   {
+    "n_sessions": 12,
+    "session_bootstrap_coverage": 0.9165,
+    "specimen_bootstrap_coverage": 0.8625,
+    "exact_coverage": 0.956,
+    "exact_stated_level": 0.96142578125,
+    "session_bootstrap_median_width": 0.3563716026094531,
+    "exact_median_width": 0.4853573349425521
+   },
+   {
+    "n_sessions": 20,
+    "session_bootstrap_coverage": 0.929,
+    "specimen_bootstrap_coverage": 0.8565,
+    "exact_coverage": 0.9585,
+    "exact_stated_level": 0.9586105346679688,
+    "session_bootstrap_median_width": 0.28155730003158363,
+    "exact_median_width": 0.35460367231602
+   }
+  ],
+  "unequal session sizes": [
+   {
+    "n_sessions": 2,
+    "session_bootstrap_coverage": 0.512,
+    "specimen_bootstrap_coverage": 0.7635,
+    "exact_coverage": 0.512,
+    "exact_stated_level": 0.5,
+    "session_bootstrap_median_width": 0.3587817687800776,
+    "exact_median_width": 0.3587817687800776
+   },
+   {
+    "n_sessions": 3,
+    "session_bootstrap_coverage": 0.7365,
+    "specimen_bootstrap_coverage": 0.779,
+    "exact_coverage": 0.74,
+    "exact_stated_level": 0.75,
+    "session_bootstrap_median_width": 0.6000591427157433,
+    "exact_median_width": 0.6027233857205886
+   },
+   {
+    "n_sessions": 4,
+    "session_bootstrap_coverage": 0.7935,
+    "specimen_bootstrap_coverage": 0.787,
+    "exact_coverage": 0.8685,
+    "exact_stated_level": 0.875,
+    "session_bootstrap_median_width": 0.567624755519187,
+    "exact_median_width": 0.7374476610009707
+   },
+   {
+    "n_sessions": 5,
+    "session_bootstrap_coverage": 0.8385,
+    "specimen_bootstrap_coverage": 0.789,
+    "exact_coverage": 0.9375,
+    "exact_stated_level": 0.9375,
+    "session_bootstrap_median_width": 0.5705601471833213,
+    "exact_median_width": 0.885638825271239
+   },
+   {
+    "n_sessions": 6,
+    "session_bootstrap_coverage": 0.854,
+    "specimen_bootstrap_coverage": 0.7945,
+    "exact_coverage": 0.9665,
+    "exact_stated_level": 0.96875,
+    "session_bootstrap_median_width": 0.5350099344760219,
+    "exact_median_width": 0.9367599098315305
+   },
+   {
+    "n_sessions": 8,
+    "session_bootstrap_coverage": 0.8835,
+    "specimen_bootstrap_coverage": 0.7975,
+    "exact_coverage": 0.9905,
+    "exact_stated_level": 0.9921875,
+    "session_bootstrap_median_width": 0.4893234009031842,
+    "exact_median_width": 1.0848276034068882
+   },
+   {
+    "n_sessions": 12,
+    "session_bootstrap_coverage": 0.905,
+    "specimen_bootstrap_coverage": 0.8165,
+    "exact_coverage": 0.9585,
+    "exact_stated_level": 0.96142578125,
+    "session_bootstrap_median_width": 0.42439287259757175,
+    "exact_median_width": 0.5819108523888079
+   },
+   {
+    "n_sessions": 20,
+    "session_bootstrap_coverage": 0.9255,
+    "specimen_bootstrap_coverage": 0.8085,
+    "exact_coverage": 0.9585,
+    "exact_stated_level": 0.9586105346679688,
+    "session_bootstrap_median_width": 0.33630744796782425,
+    "exact_median_width": 0.427985980770888
+   }
+  ]
+ }
+}

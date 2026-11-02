@@ -1,0 +1,21 @@
+name: Rebuild the study
+
+# Slow, and it downloads data, so it runs on request rather than on every push.
+on:
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install ".[study]"
+      - run: python -m study
+      - name: Show what changed against the committed results
+        run: git diff --stat results docs/FINDINGS.md myco_fusion/data/findings.json
+      - name: Check generated files still pass the tests
+        run: python -m unittest discover -s tests

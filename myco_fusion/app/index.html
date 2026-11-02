@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Myco Fusion — Research workbench</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/findings.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#findings" aria-label="Myco Fusion home">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 22C5 11 12 5 20 5s15 6 15 17H5Z"/><path d="M17 22v11h6V22M10 18l4 4m5-10v10m10-4-4 4"/></svg>
+      <span>myco<span class="brand-light">fusion</span></span>
+    </a>
+    <div class="sidebar-label">WORKBENCH</div>
+    <nav aria-label="Workbench sections">
+      <button class="nav-item active" data-view="findings" aria-current="page"><span class="nav-number">01</span> Findings</button>
+      <button class="nav-item" data-view="bench"><span class="nav-number">02</span> Spectral bench</button>
+      <button class="nav-item" data-view="phone"><span class="nav-number">03</span> Phone test</button>
+      <button class="nav-item" data-view="calibration"><span class="nav-number">04</span> Calibration lab</button>
+      <button class="nav-item" data-view="validate"><span class="nav-number">05</span> Validate measurements</button>
+      <button class="nav-item" data-view="capture"><span class="nav-number">06</span> Capture record</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="status-dot-line"><span class="dot"></span> Runs on your computer</div>
+      <p>From a useful image<br>to a testable measurement.</p>
+      <div class="sidebar-version">v0.3 <span>Research prototype</span></div>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar"><span>MYCO FUSION <span class="crumb">/</span> <span id="breadcrumb">FINDINGS</span></span><span class="research-tag">RESEARCH ONLY · NEVER USE TO DECIDE WHAT IS SAFE TO EAT</span></header>
+    <main>
+      <section id="view-findings" class="view" aria-labelledby="findings-title">
+        <div id="findings-root" aria-live="polite"><p class="chart-empty">Loading the findings…</p></div>
+      </section>
+
+      <section id="view-bench" class="view" aria-labelledby="bench-title" hidden>
+        <div class="page-heading"><div><div class="eyebrow">SPECTRAL BENCH · WAYS OF TAKING THE PHOTO</div><h1 id="bench-title">What can RGB<br><em>actually tell us?</em></h1><p class="lede">Compare four ways of taking the photo on the measured reflectance of 532 samples of natural objects. Every estimate is held out, so no species or specimen helps predict itself.</p></div><div class="heading-mark" aria-hidden="true"><span>λ</span><small>420 — 680 nm</small></div></div>
+        <div class="notice"><span class="badge amber" id="bench-badge">SIMULATED CAMERA</span><p id="bench-notice">Reflectance spectra are measured. The camera and lights are illustrative curves and the RGB values are simulated, so these results do not validate a phone.</p></div>
+        <form id="experiment-form" class="control-bar">
+          <label class="source-label">Spectra<select id="bench-source"><option value="measured">Measured natural objects</option><option value="idealized">Idealized four-number model</option></select></label>
+          <label>Random seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="7" required></label>
+          <label class="noise-label">Sensor noise<input id="noise" type="number" min="0" max="0.1" step="0.001" value="0.005" required></label>
+          <button class="button primary" id="run-experiment" type="submit">Run experiment <span aria-hidden="true">↗</span></button>
+          <button class="button quiet" id="export-experiment" type="button" disabled>↓ Export JSON</button>
+        </form>
+        <div id="bench-message" class="message" role="status" aria-live="polite"></div>
+        <div id="scenarios" class="scenario-grid" aria-label="Select a scenario"></div>
+        <div class="bench-grid">
+          <article class="panel spectral-panel">
+            <div class="panel-heading"><div><div class="eyebrow">ONE HELD-OUT OBJECT / SELECTED SCENARIO</div><h2 id="spectrum-title">Spectrum comparison</h2></div><div class="segmented" role="group" aria-label="Which object to show"><button type="button" id="example-typical" class="segment active" aria-pressed="true">Typical</button><button type="button" id="example-worst" class="segment" aria-pressed="false">Worst</button></div></div>
+            <p id="example-name" class="example-name"></p>
+            <div class="legend"><span><i class="line reference"></i> Measured reflectance</span><span><i class="line estimate"></i> Estimated reflectance</span></div>
+            <div id="spectrum-chart" class="chart" aria-label="Reflectance spectrum chart"><div class="chart-empty">Running the first experiment…</div></div>
+            <p id="scenario-description" class="chart-caption">Select a scenario above to inspect its estimated spectrum.</p>
+          </article>
+          <article class="panel rank-panel">
+            <div class="eyebrow">INDEPENDENT MEASUREMENTS</div><h2>How much did this capture really measure?</h2>
+            <div class="rank-value"><span id="rank-number">—</span><span class="rank-total">/ —</span></div>
+            <div id="rank-bars" class="rank-bars" aria-hidden="true"></div>
+            <div id="rank-state" class="rank-state">Waiting for experiment</div>
+            <p id="rank-explanation">Recorded numbers are not the same as independent measurements.</p>
+            <dl class="diagnostic-list" id="scenario-stats"></dl>
+          </article>
+        </div>
+        <article class="panel metamer-panel">
+          <div class="metamer-copy"><div class="eyebrow">THE METAMER CHECK</div><h2 id="metamer-title">Different spectra.<br>Nearly the same RGB.</h2><p id="metamer-text">Two objects a camera cannot tell apart under one light.</p><div class="metamer-stats"><div><strong id="metamer-rgb">—</strong><span id="metamer-rgb-label">RGB difference</span></div><div><strong id="metamer-rmse">—</strong><span id="metamer-rmse-label">Spectral difference</span></div></div></div>
+          <div><div class="legend" id="metamer-legend"><span><i class="line reference"></i> <span id="metamer-a">Spectrum A</span></span><span><i class="line estimate"></i> <span id="metamer-b">Spectrum B</span></span></div><div id="metamer-chart" class="chart small-chart" aria-label="Two distinct spectra with nearly identical RGB"></div></div>
+        </article>
+        <details class="notes"><summary>Model assumptions &amp; experiment notes</summary><ul id="experiment-notes"></ul></details>
+      </section>
+
+      <section id="view-phone" class="view" aria-labelledby="phone-title" hidden>
+        <div class="page-heading compact"><div><div class="eyebrow">PHONE TEST · NOTHING TO BUY</div><h1 id="phone-title">Test your own phone.<br><em>No spectrometer needed.</em></h1><p class="lede">A phone can answer two questions by itself. How stable are its photos from day to day? And do extra lights add independent measurements, or only more numbers?</p></div></div>
+        <div class="notice"><span class="badge neutral">WHAT THIS CANNOT SHOW</span><p>This test measures stability and independent measurements. It does not show spectral accuracy, which needs a reference instrument, and it says nothing about identifying fungi.</p></div>
+        <div class="phone-steps">
+          <article class="panel"><span class="step-number">1</span><h3>Set up</h3><p>Fix the phone on a stand in a dark room. Lock focus and exposure if you can. Choose about 30 matte objects with varied colors, and mark where each one sits.</p></article>
+          <article class="panel"><span class="step-number">2</span><h3>Change the light</h3><p>Photograph each object with the flash, then lit by a laptop or tablet screen showing each color in the light panel. Keep the screen close and in the same place.</p><button class="button secondary" id="open-light-panel" type="button">Open light panel <span aria-hidden="true">↗</span></button></article>
+          <article class="panel"><span class="step-number">3</span><h3>Repeat</h3><p>Take 3 photos per object and light, in at least 3 sessions on different days or restarts. Name each file by object, session, light and repeat, like <code>mug_s1_flash_r2.jpg</code> or <code>mug_s1_screen-red_r2.jpg</code>.</p></article>
+          <article class="panel"><span class="step-number">4</span><h3>Analyze</h3><p>Add the photos below and draw a box over the object, or paste your own table. Photos stay on this computer.</p></article>
+        </div>
+        <article class="panel upload-panel"><div class="panel-heading"><div><div class="eyebrow">PHOTOS TO TABLE</div><h2>Measure a region in your photos</h2></div></div>
+          <p>Add photos of objects in the same position, then drag a box over the object. Each photo’s box average becomes one row. Browsers give tone-mapped values, which suit a stability check. For the independent-measurement count, RAW-derived values are better.</p>
+          <div class="file-row"><label class="button secondary file-button">Choose photos<input id="roi-files" type="file" accept="image/*" multiple aria-label="Choose photos"></label><span id="roi-status">No photos selected</span></div>
+          <div id="roi-stage" class="roi-stage" hidden><canvas id="roi-canvas" aria-label="Photo preview. Drag to draw a box over the object."></canvas></div>
+          <div class="form-footer" id="roi-actions" hidden><span class="microcopy" id="roi-box-text">Drag on the photo to draw a box.</span><button class="button primary" id="roi-measure" type="button" disabled>Add these photos to the table <span aria-hidden="true">↓</span></button></div>
+        </article>
+        <article class="panel upload-panel"><div class="panel-heading"><div><div class="eyebrow">PHOTO TABLE / CSV</div><h2>Analyze the test</h2></div><button class="button quiet" id="load-phone-demo" type="button">Load simulated example</button></div>
+          <p>One row per photo, with columns <code>object_id, session_id, light, repeat, r, g, b</code>. Objects should appear in every session. That crossed design is what this analysis is built for.</p>
+          <div class="file-row"><label class="button secondary file-button">Choose CSV<input id="phone-file" type="file" accept=".csv,text/csv" aria-label="Choose photo table CSV"></label><span id="phone-file-name">Or use the box tool above, or paste below</span></div>
+          <label class="field-label" for="phone-input">Photo table</label><textarea id="phone-input" rows="8" spellcheck="false" placeholder="object_id,session_id,light,repeat,r,g,b&#10;mug,s1,flash,1,0.42,0.31,0.18"></textarea>
+          <div class="form-footer"><span id="phone-kind" class="microcopy">Values are used as supplied. The app cannot verify how they were captured.</span><button class="button primary" id="analyze-phone" type="button">Analyze <span aria-hidden="true">↗</span></button></div>
+        </article>
+        <div id="phone-message" class="message" role="status" aria-live="polite"></div>
+        <div id="phone-results" hidden>
+          <div class="notice"><span id="phone-data-kind" class="badge amber">SOURCE UNVERIFIED</span><p id="phone-provenance"></p></div>
+          <div class="calibration-metrics"><article class="panel metric-card"><span class="eyebrow">PHOTOS</span><strong id="phone-photos">—</strong><span id="phone-photos-note">Rows analyzed</span></article><article class="panel metric-card"><span class="eyebrow">OBJECTS × SESSIONS</span><strong id="phone-design">—</strong><span id="phone-design-note">Crossed design</span></article><article class="panel metric-card"><span class="eyebrow">LIGHTS</span><strong id="phone-lights">—</strong><span>Compared separately and together</span></article></div>
+          <div class="section-heading"><div><div class="eyebrow">DO EXTRA LIGHTS ADD MEASUREMENTS?</div><h2>Independent measurements</h2></div><button class="button secondary" id="export-phone" type="button">↓ Export report</button></div>
+          <article class="panel"><p class="microcopy">A direction counts only if it is stronger than the strongest direction photo-to-photo noise produces on its own. The count cannot exceed the number of objects minus one.</p><div id="phone-rank"></div></article>
+          <div class="section-heading"><div><div class="eyebrow">HOW STABLE ARE THE PHOTOS?</div><h2>Repeatability by light and channel</h2></div></div>
+          <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Light</th><th>Channel</th><th>Mean</th><th>Photo-to-photo SD</th><th>Session SD <small>95% interval</small></th><th>Object × session SD</th><th>Repeatability coefficient</th><th>Reproducibility coefficient</th><th>ICC</th></tr></thead><tbody id="phone-table"></tbody></table></div></div>
+          <p class="microcopy table-note">Two photos in one session should differ by less than the repeatability coefficient 95% of the time. Across sessions, use the reproducibility coefficient. ICC near 1 means objects differ far more than repeat photos do.</p>
+          <details class="notes" open><summary>Report notes &amp; provenance</summary><ul id="phone-notes"></ul><p class="hash" id="phone-hash"></p></details>
+        </div>
+      </section>
+
+      <section id="view-calibration" class="view" aria-labelledby="calibration-title" hidden>
+        <div class="page-heading compact"><div><div class="eyebrow">CALIBRATION LAB · FIT / TUNE / TEST</div><h1 id="calibration-title">Learn the mapping.<br><em>Hold out the evidence.</em></h1><p class="lede">Fit estimated spectra from paired linear RGB and reference reflectance. Tune on validation specimens, then evaluate once on a separate test set. This is the step that needs a spectrometer.</p></div></div>
+        <div class="notice"><span class="badge neutral">PAIRED INPUTS</span><p>This lab accepts extracted, normalized linear RGB and 27-band reference spectra. It does not decode DNG or turn an iPhone ProRAW rendering into a verified sensor-linear measurement.</p></div>
+        <article class="panel upload-panel"><div class="panel-heading"><div><div class="eyebrow">CALIBRATION DATASET / JSON</div><h2>Start with independent splits</h2></div><button class="button quiet" id="load-calibration-demo" type="button">Load simulated example</button></div>
+          <p>Declare <code>train</code>, <code>validation</code>, and <code>test</code> observations with specimen and session IDs. Specimen overlap is rejected; session holdout is required by default. Repeated observations receive equal total weight per specimen.</p>
+          <div class="file-row"><label class="button secondary file-button">Choose JSON<input id="calibration-file" type="file" accept=".json,application/json" aria-label="Choose calibration dataset JSON"></label><span id="calibration-file-name">Or paste a calibration dataset below</span></div>
+          <label class="field-label" for="calibration-input">Dataset JSON</label><textarea id="calibration-input" rows="9" spellcheck="false" placeholder='{"schema_version":"myco-fusion.calibration/0.2","rgb_encoding":"linear_normalized","device":"…","pipeline_id":"…","observations":[…]}'></textarea>
+          <div class="uncertainty-control"><label for="calibration-uncertainty">Test-set uncertainty<select id="calibration-uncertainty" aria-describedby="calibration-uncertainty-help"><option value="auto">Automatic (recommended)</option><option value="specimen">Treat specimens as independent</option><option value="session_cluster">Use one median per session</option></select></label><p id="calibration-uncertainty-help">Uses sessions when they are supplied and nested, otherwise specimens. Intervals state the confidence they actually reach.</p></div>
+          <p class="microcopy">This choice is saved as <code>dataset.uncertainty</code> and controls test-set intervals. The separate <code>require_session_holdout</code> setting checks session overlap between training, validation and test splits. A session-based interval needs each physical specimen in one session. It takes at least 6 sessions to reach 95%; with fewer, the app reports the true, lower level.</p>
+          <div class="form-footer"><span class="microcopy" id="calibration-input-kind">Load the simulated example to see the complete input format.</span><div class="button-group"><button class="button quiet" id="export-calibration-input" type="button">↓ Save input JSON</button><button class="button primary" id="fit-calibration" type="button">Fit & evaluate <span aria-hidden="true">↗</span></button></div></div>
+        </article>
+        <div id="calibration-message" class="message" role="status" aria-live="polite"></div>
+        <div id="calibration-results" hidden>
+          <div class="notice"><span id="calibration-kind" class="badge amber">SIMULATED INPUT</span><p id="calibration-provenance"></p></div>
+          <div class="section-heading"><div><div class="eyebrow">SPECIMEN-BALANCED / HELD-OUT TEST</div><h2>Does the calibration beat a simple baseline?</h2></div></div>
+          <div class="calibration-metrics"><article class="panel metric-card"><span class="eyebrow">FITTED MODEL</span><strong id="calibration-mae">—</strong><span>Mean specimen MAE</span></article><article class="panel metric-card"><span class="eyebrow">TRAINING-MEDIAN BASELINE</span><strong id="calibration-baseline">—</strong><span>Mean specimen MAE<br><span id="calibration-median-baseline">Training-mean baseline: —</span></span></article><article class="panel metric-card"><span class="eyebrow">MODEL MINUS BASELINE</span><strong id="calibration-difference">—</strong><span id="calibration-difference-label">Median per specimen</span></article></div>
+          <div class="calibration-grid"><article class="panel table-panel"><div class="table-heading"><div class="eyebrow">SPLIT ACCOUNTING</div><h2>Independent evidence</h2></div><div class="table-scroll"><table><thead><tr><th>Split</th><th>Specimens</th><th>Sessions</th><th>Observations</th></tr></thead><tbody id="calibration-counts"></tbody></table></div></article><article class="panel"><div class="eyebrow">FIT DIAGNOSTICS</div><h2>What the design supports</h2><dl class="diagnostic-list" id="calibration-diagnostics"></dl><p class="microcopy">Design rank concerns the fitted RGB regression. It does not imply that 27 independent spectral channels were measured.</p></article></div>
+          <article class="panel"><div class="panel-heading"><div><div class="eyebrow">FIRST HELD-OUT OBSERVATION</div><h2 id="calibration-spectrum-title">Test spectrum</h2></div><span class="small-tag">REFERENCE / ESTIMATE</span></div><div class="legend"><span><i class="line reference"></i> Reference reflectance</span><span><i class="line estimate"></i> Estimated reflectance</span></div><div id="calibration-chart" class="chart"></div><p class="chart-caption">This curve shows one observation. The primary comparison averages errors within each test specimen, then averages specimens equally. Predictions remain unclipped.</p></article>
+          <div class="section-heading"><div><div class="eyebrow">TEST RESULTS / REGIME</div><h2>Check performance across conditions</h2></div></div><div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Regime</th><th>Specimens / observations</th><th>Median SAM <small>exact interval</small></th><th>Median MAE <small>exact interval</small></th><th>Within both draft targets <small>specimens</small></th></tr></thead><tbody id="calibration-regimes"></tbody></table></div></div>
+          <div class="notice subtle"><span id="calibration-uncertainty-kind" class="badge neutral">SPECIMEN INTERVAL</span><p id="calibration-interval-summary"></p></div><ul id="calibration-interval-notes" class="interval-notes"></ul>
+          <details class="notes"><summary>Validation tuning & selected regularization</summary><p id="calibration-alpha"></p><div class="table-scroll"><table><thead><tr><th>Ridge alpha</th><th>Validation mean specimen MAE</th><th>Selection</th></tr></thead><tbody id="calibration-tuning"></tbody></table></div></details>
+          <details class="notes" open><summary>Scope, assumptions & provenance</summary><ul id="calibration-notes"></ul><p id="calibration-model-hash" class="hash"></p><p id="calibration-input-hash" class="hash"></p></details>
+          <div class="export-bar"><span>Keep the model and its evaluation together.</span><div class="button-group"><button id="export-calibration-model" class="button secondary" type="button">↓ Model JSON</button><button id="export-calibration-report" class="button secondary" type="button">↓ Report JSON</button><button id="export-calibration-csv" class="button secondary" type="button">↓ Predictions CSV</button></div></div>
+        </div>
+      </section>
+
+      <section id="view-validate" class="view" aria-labelledby="validate-title" hidden>
+        <div class="page-heading compact"><div><div class="eyebrow">VALIDATE · PAIRED SPECTRA</div><h1 id="validate-title">Bring the<br><em>reference data.</em></h1><p class="lede">Compare paired reference and estimated spectra. Keep repeats together, account for acquisition sessions, and inspect the specimens with the largest errors.</p></div></div>
+        <div class="notice"><span class="badge neutral">DRAFT TARGETS</span><p>SAM ≤ 10° and MAE ≤ 0.05 are unvalidated placeholders. The app shows how many specimens meet both, because a median can look fine while many specimens do not.</p></div>
+        <div class="panel upload-panel"><div class="panel-heading"><div><div class="eyebrow">PAIRED SPECTRA / CSV</div><h2>Import an experiment</h2></div><button class="button quiet" id="load-demo" type="button">Load simulated example</button></div>
+          <p>One row per wavelength. Every observation needs all 27 bands, 420–680 nm in 10 nm steps. Reference reflectance must be between 0 and 1; estimates are evaluated without clipping.</p>
+          <div class="file-row"><label class="button secondary file-button">Choose CSV<input id="csv-file" type="file" accept=".csv,text/csv" aria-label="Choose paired spectra CSV"></label><span id="file-name">Or paste your CSV below</span></div>
+          <label class="field-label" for="csv-input">CSV data</label><textarea id="csv-input" rows="8" spellcheck="false" placeholder="specimen_id,regime,repeat,wavelength_nm,reference,estimate&#10;tile-001,R1,1,420,0.45,0.46"></textarea>
+          <div class="uncertainty-control"><label for="validation-uncertainty">Uncertainty calculation<select id="validation-uncertainty" aria-describedby="uncertainty-help"><option value="auto">Automatic (recommended)</option><option value="specimen">Treat specimens as independent</option><option value="session_cluster">Use one median per session</option></select></label><p id="uncertainty-help">Uses sessions when they are supplied and nested, otherwise specimens. Intervals state the confidence they actually reach.</p></div>
+          <p class="microcopy">For session clustering, provide <code>session_id</code> on every CSV row and keep each physical specimen in exactly one session across regimes. Crossed designs belong in the Phone test tab. It takes at least 6 sessions for a session-based interval to reach 95%; with fewer, the app reports the true, lower level. Optional <code>spot_id</code> keeps paired spots identifiable.</p>
+          <div class="form-footer"><span id="import-kind" class="microcopy">Input provenance will be included in the exported report.</span><button class="button primary" id="validate-csv" type="button">Evaluate spectra <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div id="validate-message" class="message" role="status" aria-live="polite"></div>
+        <div id="validation-results" hidden>
+          <div class="notice" id="validation-provenance"><span class="badge amber" id="validation-kind">SOURCE UNVERIFIED</span><p id="validation-provenance-text">Source provenance must be confirmed by the researcher.</p></div>
+          <div class="calibration-metrics validation-metrics"><article class="panel metric-card"><span class="eyebrow">PHYSICAL SPECIMENS</span><strong id="validation-specimen-count">—</strong><span>Unique across regimes</span></article><article class="panel metric-card"><span class="eyebrow">ACQUISITION SESSIONS</span><strong id="validation-session-count">—</strong><span id="validation-session-count-label">Unique session IDs</span></article><article class="panel metric-card"><span class="eyebrow">PAIRED OBSERVATIONS</span><strong id="validation-observation-count">—</strong><span>All repeats and spots</span></article></div>
+          <div class="section-heading"><div><div class="eyebrow">RESULTS BY LIGHTING REGIME</div><h2>Measurement agreement</h2></div><button class="button secondary" id="export-validation" type="button">↓ Export report</button></div>
+          <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Regime</th><th>Specimens / observations</th><th>Median SAM <small>exact interval</small></th><th>Median MAE <small>exact interval</small></th><th>Within both draft targets <small>specimens</small></th></tr></thead><tbody id="validation-table"></tbody></table></div></div>
+          <div class="notice subtle"><span class="badge neutral" id="validation-uncertainty-kind">SPECIMEN INTERVAL</span><p id="validation-uncertainty-summary"></p></div>
+          <ul id="validation-interval-notes" class="interval-notes"></ul>
+          <div class="section-heading"><div><div class="eyebrow">ERROR DISTRIBUTION / MATCHED CONDITIONS</div><h2>Look beyond the median</h2></div></div>
+          <div class="calibration-grid"><article class="panel table-panel"><div class="table-heading"><div class="eyebrow">SPECIMEN TAIL ERRORS</div><h2>The difficult cases</h2><p class="microcopy">Computed from mean errors per physical specimen within each regime.</p></div><div class="table-scroll"><table><thead><tr><th>Regime</th><th>Worst MAE</th><th>90th percentile MAE</th></tr></thead><tbody id="validation-tail-table"></tbody></table></div></article><article class="panel"><div class="eyebrow">MATCHED SPECIMENS / R3 − R1</div><h2>Same specimens, two conditions</h2><dl id="validation-paired-summary" class="diagnostic-list"></dl><p id="validation-paired-note" class="microcopy"></p><p class="microcopy">Negative deltas mean lower error in R3. The interval treats specimens as independent and has no causal interpretation.</p></article></div>
+          <details class="notes"><summary id="validation-specimen-summary">Inspect specimen summaries</summary><p>Sorted by mean MAE, largest first. Repeats and spots are averaged within each specimen and regime.</p><div class="table-scroll"><table><thead><tr><th>Specimen</th><th>Regime</th><th>Sessions</th><th>Observations</th><th>Mean SAM</th><th>Mean MAE</th></tr></thead><tbody id="validation-specimen-table"></tbody></table></div></details>
+          <details class="notes"><summary id="validation-session-summary">Inspect session summaries</summary><p id="validation-session-note">Session summaries describe the specimen means within each session and regime.</p><div class="table-scroll"><table><thead><tr><th>Session</th><th>Regime</th><th>Specimens</th><th>Observations</th><th>Median SAM</th><th>Median MAE</th></tr></thead><tbody id="validation-session-table"></tbody></table></div></details>
+          <details class="notes"><summary id="validation-paired-detail-summary">Inspect matched R1 / R3 specimens</summary><p id="validation-unmatched-note"></p><div class="table-scroll"><table><thead><tr><th>Specimen</th><th>R1 mean MAE</th><th>R3 mean MAE</th><th>Δ MAE</th><th>R1 mean SAM</th><th>R3 mean SAM</th><th>Δ SAM</th></tr></thead><tbody id="validation-paired-table"></tbody></table></div></details>
+          <details class="notes" open><summary>Report notes & provenance</summary><ul id="validation-notes"></ul><p class="hash" id="input-hash"></p></details>
+        </div>
+      </section>
+
+      <section id="view-capture" class="view" aria-labelledby="capture-title" hidden>
+        <div class="page-heading compact"><div><div class="eyebrow">FIELDWORK · BEFORE THE FIRST CAPTURE</div><h1 id="capture-title">Make every<br><em>specimen traceable.</em></h1><p class="lede">Create a draft record for a capture session. Keep the reference, device, and illumination linked before collecting data.</p></div></div>
+        <div class="capture-grid">
+          <form id="capture-form" class="panel"><div class="panel-heading"><div><div class="eyebrow">SESSION MANIFEST</div><h2>Start a record</h2></div><span class="badge neutral">DRAFT</span></div>
+            <div class="form-grid"><label>Specimen ID<input name="specimen_id" required maxlength="200" placeholder="e.g. MF-2026-001"></label><label>Session ID<input name="session_id" required maxlength="200" placeholder="e.g. bench-session-01"></label><label>Device / camera<input name="device" required maxlength="200" placeholder="Model, camera, capture app"></label><label>Lighting regime<select name="regime"><option value="R1">R1 · dark room + flash</option><option value="R2">R2 · ambient canopy</option><option value="R3">R3 · canopy + shield + flash</option><option value="R4">R4 · overcast ambient</option></select></label></div>
+            <label>Reference instrument / calibration ID<input name="reference_id" required maxlength="200" placeholder="Spectrometer and white-reference calibration"></label>
+            <label>Session notes<textarea name="notes" rows="4" maxlength="5000" placeholder="Spot location, exposure settings, illumination, planned repeats…"></textarea></label>
+            <p class="microcopy">This creates a metadata draft. Image files, spectra, poses, and hashes must be attached and checked before analysis.</p>
+            <button class="button primary" type="submit" id="create-manifest">Create draft manifest <span aria-hidden="true">↗</span></button>
+          </form>
+          <aside class="panel field-checklist"><div class="eyebrow">CAPTURE PLANNING</div><h2>One session.<br>A clear chain of evidence.</h2><ol><li><strong>Fix the measurement conditions</strong><span>Record the camera pipeline, exposure, illumination, white reference, and instrument calibration.</span></li><li><strong>Pair the same physical spot</strong><span>Contact spectra and image regions must refer to the same area and acquisition conditions.</span></li><li><strong>Keep specimens independent</strong><span>Keep all spots and repeats from a specimen together across training and evaluation splits.</span></li></ol><p class="microcopy">This checklist is guidance, not a record that a step has been completed.</p></aside>
+        </div>
+        <div id="capture-message" class="message" role="status" aria-live="polite"></div>
+        <div id="manifest-result" class="panel" hidden><div class="panel-heading"><h2>Draft manifest</h2><button class="button secondary" id="export-manifest" type="button">↓ Download JSON</button></div><ul id="manifest-warnings" class="warning-list"></ul><pre id="manifest-preview"></pre></div>
+      </section>
+      <footer><span>Myco-fusion · research workbench · Built by Patrick Iben · <a href="https://github.com/patrickiben/myco-fusion" target="_blank" rel="noopener noreferrer">Source</a></span><span>Does not identify species or determine edibility.</span></footer>
+    </main>
+  </div>
+  <div id="light-panel" class="light-panel" hidden role="dialog" aria-label="Full-screen color light panel" tabindex="-1"><div class="light-panel-help"><strong id="light-name">Red</strong><span>Click or press an arrow key for the next color. Press Esc to close.</span></div></div>
+</body>
+</html>

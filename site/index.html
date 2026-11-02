@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Myco-fusion findings</title>
+  <meta name="description" content="How far can a phone camera go toward a spectrum? A simulation on measured reflectance of 532 samples of natural objects. No phone was tested. Never use this to decide whether a mushroom is safe to eat.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .workspace { margin-left: 0; }
+    main { max-width: 1120px; }
+    .site-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 46px; background: var(--forest); color: #f3f4e9; flex-wrap: wrap; }
+    .site-top .brand { color: #f3f4e9; font-size: 22px; }
+    .site-top a.repo { color: #f3f4e9; font-size: 14px; text-underline-offset: 3px; }
+    .site-run { margin-top: 18px; }
+    .site-run pre { font-size: 13px; }
+    .site-run p { font-size: 15px; line-height: 1.7; color: var(--body); max-width: 780px; }
+    @media (max-width: 700px) { .site-top { padding: 14px 20px; } }
+  </style>
+</head>
+<body>
+  <header class="site-top">
+    <span class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 22C5 11 12 5 20 5s15 6 15 17H5Z"/><path d="M17 22v11h6V22M10 18l4 4m5-10v10m10-4-4 4"/></svg><span>myco<span class="brand-light">fusion</span></span></span>
+    <a class="repo" href="https://github.com/patrickiben/myco-fusion">Source code and data on GitHub ↗</a>
+  </header>
+  <div class="workspace">
+    <main>
+      <div id="findings-root" aria-live="polite"><p class="chart-empty">Loading the findings…</p></div>
+      <noscript><p class="message error">This page draws its charts with JavaScript. The same findings are in <a href="https://github.com/patrickiben/myco-fusion/blob/main/docs/FINDINGS.md">docs/FINDINGS.md</a>.</p></noscript>
+      <article class="panel site-run">
+        <h2>Run it yourself</h2>
+        <p>The workbench runs on your computer: the bench, the calibration lab, the validator and the phone test, which needs nothing you don't already own. Photos stay on your machine.</p>
+        <pre>git clone https://github.com/patrickiben/myco-fusion
+cd myco-fusion
+python3 -m venv .venv
+.venv/bin/pip install .
+.venv/bin/myco-fusion serve --open</pre>
+      </article>
+      <footer><span>Myco-fusion · Built by Patrick Iben</span><span>Does not identify species or determine edibility.</span></footer>
+    </main>
+  </div>
+  <script src="findings.js"></script>
+  <script>
+    fetch('findings.json')
+      .then((response) => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
+      .then((data) => window.MycoCharts.renderFindings(document.getElementById('findings-root'), data))
+      .catch((error) => { const root = document.getElementById('findings-root'); root.textContent = `The findings could not be loaded (${error.message}). They are also in docs/FINDINGS.md on GitHub.`; });
+  </script>
+</body>
+</html>
