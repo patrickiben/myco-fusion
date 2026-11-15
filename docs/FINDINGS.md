@@ -5,6 +5,8 @@ A phone camera records three numbers per pixel, so it cannot measure a 27-band s
 
 With calibration on hundreds of similar objects measured by spectrometer, 83% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, 60% did. When the light changed and nothing corrected for it, 0–34% did, and a white reference card brought that back to 52–59%. Using a screen as an extra light added almost nothing at the median. With the iPhone curves, the first two figures were 84–86% and 61–64%.
 
+A later test, fixed before it ran, checked four added parts and a weighted combination of estimators. One part was a forward model built from the camera's and flash's curves. Only a nonlinear fit passed, and it lowered the median error by just 0.2%, far below the study's 10% bar.
+
 **No phone photo and no wild fungus was tested. Never use this to decide whether a mushroom is safe to eat.**
 
 | Condition | Share meeting both draft targets |  |
@@ -195,9 +197,40 @@ The app now uses exact order-statistic intervals that state their true level: 75
 
 *Caveat: Simulated with 5 specimens per session and sessions making up 36% of the variance. Other scenarios are in results/coverage.json.*
 
+## 10. Of four added parts, only a nonlinear fit passed the admission test, and it helped mainly the hardest samples
+
+A later test, added to the plan and fixed before it ran, asked whether four parts improve the one-photo estimate: a kernel fit, a polynomial fit, a linear fit with a smoothness penalty across bands, and a forward model that works out the spectrum from the camera's and flash's measured curves. Half of the natural-object samples were used for fitting and half for scoring, over 20 noise draws. To pass, a part had to meet four conditions: removing it from a weighted combination of all five estimators made held-out error worse, after a correction for testing four parts; scrambling its predictions did not help; it beat the linear fit on its own; and the earlier results stayed unchanged. Run 200 times on parts of known value, the test never passed a useless part and passed one that removed a fifth of the linear fit's error in 94% of runs.
+
+Only the kernel fit passed. Its median error was 0.2% lower than the linear fit's, far below the study's 10% bar for a useful gain, while its 90th percentile error was 18% lower. In finding 4, where five-fold cross-validation let each fit use four-fifths of the samples, the same kind of fit lowered median MAE by 16%. With half the samples, that median gain nearly vanished, most likely because of the smaller fitting set, which was not tested. The polynomial fit beat the linear fit on its own but added nothing once the kernel fit was in the combination; removing both together, a check outside the plan, raised the combination's mean MAE by 0.002391 (0.001643 to 0.003141). The smoothness penalty changed nothing. The forward model matched the linear fit, and with another camera's curves, its mean error rose 21%.
+
+Combining all five estimators with fitted weights beat the best single estimator under the study's noise model, lowering mean MAE by 0.000264 (0.000110 to 0.000427), but not when the noise grew with the signal, so that result is not settled. The forward model also predicted which single screen color, added to the flash, would help most: red. Red beat a fixed choice of blue under both noise models, lowering mean MAE by 0.001600 (0.000964 to 0.002241) under the study's, yet no single screen color cleared the study's 20% bar against flash alone at the median.
+
+*Held-out error by estimator, lower is better*
+
+|  | Median MAE | 90th percentile MAE |
+|---|---|---|
+| Linear fit (reference) | 0.0123 | 0.0347 |
+| Polynomial fit | 0.0119 | 0.0324 |
+| Kernel fit | 0.0123 | 0.0286 |
+| Smoothness penalty | 0.0123 | 0.0346 |
+| Forward model | 0.0122 | 0.0350 |
+| Forward model, wrong camera | 0.0149 | 0.0467 |
+| Combination of the five | 0.0116 | 0.0298 |
+
+*The four parts against the admission test*
+
+| Part | Removed from the combination: rise in mean MAE (95% interval) | Alone, against the linear fit: drop in mean MAE (95% interval) | Drop in median MAE against the linear fit | Passed | Same verdict with noise that grows with the signal |
+|---|---|---|---|---|---|
+| Polynomial fit | 0.000005 (−0.000231 to 0.000245) | 0.001778 (0.000998 to 0.002573) | 3.2% | No | Yes |
+| Kernel fit | 0.000508 (0.000319 to 0.000712) | 0.002413 (0.001527 to 0.003344) | 0.2% | Yes | Yes |
+| Linear fit with a smoothness penalty | 0.000000 (−0.000001 to 0.000001) | −0.000009 (−0.000021 to 0.000003) | 0.0% | No | Yes |
+| Forward model from the camera and flash curves | 0.000006 (0.000002 to 0.000011) | 0.000034 (−0.000003 to 0.000069) | 1.3% | No | Yes |
+
+*Caveat: This test reused the natural objects from the findings above, scored one split of them, and used simulated photos. A part that passes is an offline result only, and nothing was added to the app. The plan's addendum lists every rule, and its deviations list one rounding defect in the test's own checks, found and fixed before the trial ran.*
+
 ## Every pre-stated test, whatever the result
 
-Drops are the median per-sample drop in MAE as a percent of the baseline median, with a 95% cluster bootstrap interval. Q1 uses the drop in the median itself, as its rule is written. A negative drop means the arm did worse.
+Drops are the median per-sample drop in MAE as a percent of the baseline median, with a 95% cluster bootstrap interval. Q1 uses the drop in the median itself, as its rule is written. A negative drop means the arm did worse. Admission-trial rows give the mean per-sample difference in MAE, with a 95% interval from resampling held-out groups.
 
 | Question | Test set | Comparison | Result (95% interval) | Rule | Outcome |
 |---|---|---|---|---|---|
@@ -303,6 +336,16 @@ Drops are the median per-sample drop in MAE as a percent of the baseline median,
 | Q7 iPhones | iPhone 12 Pro Max | Chart under that light against no correction, across 6 lights | Cleared under 5 of 6 | At least 20%, interval above 0 | 5 of 6 |
 | Q7 iPhones | iPhone 12 Pro Max | Flash plus screen against flash, calibrated on similar objects | −1% (−3 to 1) | At least 20%, interval above 0 | Not met |
 | Q7 iPhones | iPhone 12 Pro Max | Flash plus screen against flash, chart only | 1% (−1 to 2) | At least 20%, interval above 0 | Not met |
+| Admission trial | Rule check, 200 runs | A useless part passes the test | 0% of runs | At most 5% | Met |
+| Admission trial | Rule check, 200 runs | A part that removes a fifth of the linear fit's error passes | 94% of runs | At least 80% | Met |
+| Admission trial | Natural objects, held-out half | Polynomial fit: rise in mean MAE when removed from the combination | 0.000005 (−0.000231 to 0.000245) | Interval above 0 after a correction for four tests, and the other three conditions | Not met |
+| Admission trial | Natural objects, held-out half | Kernel fit: rise in mean MAE when removed from the combination | 0.000508 (0.000319 to 0.000712) | Interval above 0 after a correction for four tests, and the other three conditions | Met |
+| Admission trial | Natural objects, held-out half | Linear fit with a smoothness penalty: rise in mean MAE when removed from the combination | 0.000000 (−0.000001 to 0.000001) | Interval above 0 after a correction for four tests, and the other three conditions | Not met |
+| Admission trial | Natural objects, held-out half | Forward model from the camera and flash curves: rise in mean MAE when removed from the combination | 0.000006 (0.000002 to 0.000011) | Interval above 0 after a correction for four tests, and the other three conditions | Not met |
+| Admission trial | Natural objects, held-out half | Kernel fit: drop in median MAE against the linear fit | 0.2% | More than 10% | Not met |
+| Admission trial | Natural objects, held-out half | Combination of five against the best single estimator: drop in mean MAE | 0.000264 (0.000110 to 0.000427) | Interval above 0 | Met |
+| Admission trial | Natural objects, held-out half | Screen color chosen by the forward model (red) against always blue: drop in mean MAE | 0.001600 (0.000964 to 0.002241) | Not blue, and interval above 0 | Met |
+| Admission trial | Noise that grows with the signal | Verdicts unchanged from the study's noise model | 5 of 6 | Same verdict under both | 5 of 6 |
 
 ## What this does not show
 
@@ -323,7 +366,7 @@ Drops are the median per-sample drop in MAE as a percent of the baseline median,
 
 ## How this was done
 
-The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. No human expert has reviewed this work yet.
+The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. Finding 10 comes from an addendum to that plan, fixed before it ran. No human expert has reviewed this work yet.
 
 The plan is in [study/PLAN.md](../study/PLAN.md), the raw numbers are in [results/](../results/), and the data sources are in [DATA.md](DATA.md).
 

@@ -52,6 +52,55 @@ def fit_tm(rgb, reference, alpha: float = 1e-4) -> np.ndarray:
     )[0]
 
 
+def second_derivative_matrix(n_bands: int) -> np.ndarray:
+    """Discrete second derivative operator matrix of shape (n_bands - 2, n_bands)."""
+    if not isinstance(n_bands, (int, np.integer)) or n_bands < 3:
+        raise ValueError("n_bands must be an integer >= 3")
+    d2 = np.zeros((n_bands - 2, n_bands), dtype=float)
+    for i in range(n_bands - 2):
+        d2[i, i] = 1.0
+        d2[i, i + 1] = -2.0
+        d2[i, i + 2] = 1.0
+    return d2
+
+
+def fit_smooth_tm(rgb, reference, alpha: float = 1e-4, beta: float = 1e-3) -> np.ndarray:
+    """Fit affine ridge regression with Tikhonov second-derivative roughness regularization.
+
+    Solves the Sylvester system: (X^T X + alpha * D) W + W (beta * D_2^T D_2) = X^T Y
+    via eigendecomposition of the discrete second-derivative roughness operator.
+    When beta <= 0, this is identical to fit_tm.
+    """
+    x = _finite_array(rgb, "rgb")
+    y = _finite_array(reference, "reference")
+    if x.ndim != 2 or x.shape[1] != 3 or x.shape[0] < 4:
+        raise ValueError("rgb must have shape (n, 3), with at least 4 calibration rows")
+    if y.shape != (len(x), len(BANDS_NM)):
+        raise ValueError("reference must have shape (n, 27), matching rgb rows")
+    if np.any((y < 0) | (y > 1)):
+        raise ValueError("reference reflectance must lie in [0, 1]")
+    if not np.isscalar(alpha) or not np.isfinite(alpha) or alpha < 0:
+        raise ValueError("alpha must be a finite nonnegative number")
+    if not np.isscalar(beta) or not np.isfinite(beta) or beta < 0:
+        raise ValueError("beta must be a finite nonnegative number")
+    if beta <= 0:
+        return fit_tm(x, y, alpha=alpha)
+    n = len(x)
+    design = np.column_stack((x, np.ones(n)))
+    diag_alpha = np.array([alpha] * 3 + [0.0])
+    A = design.T @ design + np.diag(diag_alpha)
+    d2 = second_derivative_matrix(len(BANDS_NM))
+    B = beta * (d2.T @ d2)
+    C = design.T @ y
+    vals, V = np.linalg.eigh(B)
+    C_tilde = C @ V
+    W_tilde = np.zeros_like(C_tilde)
+    I4 = np.eye(4)
+    for j in range(len(BANDS_NM)):
+        W_tilde[:, j] = np.linalg.solve(A + vals[j] * I4, C_tilde[:, j])
+    return W_tilde @ V.T
+
+
 def apply_tm(rgb, weights) -> np.ndarray:
     """Apply a fitted map to (..., 3) values without clipping predictions."""
     x = _finite_array(rgb, "rgb")
