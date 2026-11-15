@@ -84,6 +84,82 @@ Added on 2026-11-01, after every result above and before any result with these c
 
 **What counts as an answer.** A Nikon conclusion holds for phones if it has the same outcome under the same rule on at least five of the six phones. The 12 Pro Max is reported on its own as the newest available. The flash is still a stand-in, so this tests the camera curves only.
 
+## Addendum: component admission trial
+
+**Status on 2026-11-14:** approved by the author before any part of it was run. This addendum does not change Q1 to Q7 or their results.
+
+An AI coding agent drafted this addendum at the author's request, and the author approved it on 2026-11-14, before any part of it was run. Before the run, this addendum is committed, and the SHA-256 (Secure Hash Algorithm, 256-bit) hashes of this file and of the trial's code are written into the results file.
+
+**Questions.** Several components could be added to the one-photo estimate. Does each one improve held-out accuracy over the simpler method that already does its job? Does a combination of estimators outperform the best single one? Can the admission rule itself tell a useful component from a useless one on this problem?
+
+**What had already been seen.** Q1 compared the polynomial and kernel estimators with the affine estimator on these natural objects, and Q4 tested flash plus all three screen colors together. No result had been computed for the smoothing estimator, the forward-model estimator, any combination of estimators, any single added screen color, or the shot-noise model. The smoothing code had been checked against a direct solution on random numbers, which says nothing about its accuracy. Every natural-object sample was used in Q1 to Q7, so this trial is not a first look at the data.
+
+### Data, split, and simulation
+
+- Natural objects only: 532 samples in 314 groups. The mushroom set is not used, because its curves have nearly one shape.
+- One split by group, drawn once with seed 20261114: half of the samples for development and half held out, with every group kept whole on one side.
+- Camera, flash, and noise as above: Nikon D5100, LED-B4, moderate noise, and 20 noise draws. Each sample's error is its MAE over the 27 bands, averaged over the draws.
+- Every penalty, setting, and weight is chosen on the development half. The held-out half is used once, after everything is fixed.
+
+### Components
+
+| Component | What it is | Simpler method it must outperform |
+|---|---|---|
+| Affine ridge | The study's primary estimator | None: it is the reference and is always included |
+| Polynomial ridge | Degree 2, as in Q1 | Affine ridge |
+| Kernel ridge | RBF kernel, as in Q1 | Affine ridge |
+| Smoothing ridge | Affine ridge with an added penalty on the second difference across bands. The penalty weight (0.0001, 0.01, 1, or 100) is chosen with the ridge penalty by inner cross-validation. | Affine ridge |
+| Forward-model estimator | It fits no map from photo to spectrum. It describes a spectrum by the development mean and its first k principal directions (k from 3 to 8, chosen by inner cross-validation), predicts the photo from the camera and flash curves, and returns the most probable spectrum given the photo and the moderate noise. The part of a spectrum that the k directions leave out is treated as extra noise. | Affine ridge |
+| Combination | A weighted average of the five estimators above, with one weight per estimator. The weights are at least zero, sum to one, and are fitted by least squares to development predictions that each estimator made for samples outside its own training folds. | The best single estimator on development, and the plain average |
+
+The forward-model estimator is given the true camera and flash curves, which is its best case. A second arm gives it the measured iPhone 12 Pro Max curves while the photos come from the Nikon, to show the cost of a wrong model. That arm is reported and is not tested for admission.
+
+### Comparison statistic
+
+For two systems, the difference is the mean over held-out samples of the paired difference in MAE. Its 95% interval is the percentile interval over 2,000 bootstrap resamples of held-out groups. The one-sided p-value is (1 + the number of resamples at or below zero) / 2,001. The statistic used in Q3 and Q4 (the median paired difference as a percent of the baseline median) and the share of samples meeting both draft targets are reported beside it and decide nothing.
+
+### Admission rule
+
+A component passes only if all four conditions hold on the held-out half. Otherwise, it does not pass.
+
+1. **Frozen items unchanged.** The Q1 to Q7 result files are byte-identical after the run, the draft targets are unchanged, and every test passes.
+2. **Unique gain.** Removing the component and refitting the combination on development data worsens held-out error: the interval of the error without the component minus the error with it lies above zero, and the Holm-adjusted p-value across the four candidate components is below 0.05.
+3. **Corruption check.** Replacing the component's predictions with corrupted ones and refitting does not lower held-out error. Two corruptions are used: predictions shuffled across samples, and predictions reflected about the development mean spectrum. For each, the paired difference (corrupted minus real) must be at least zero.
+4. **Better than the simpler method.** On its own, the component has lower held-out error than affine ridge, with the interval above zero.
+
+The combination passes if its held-out error is lower than that of the best single estimator on development, with the interval above zero. Its difference from the plain average is reported.
+
+A pass is an offline result on simulated photos. It does not put a component into the app or into the primary analysis of Q1 to Q7; that would need paired phone and spectrometer measurements. Size is reported against the rule in Q1: a component is called practically useful only if it also lowers median MAE by more than 10% below affine ridge.
+
+### Checks of the rule itself, run first
+
+A rule that passes nothing, or passes everything, gives no information. Before the verdicts on the real components are read, the rule is run on components whose value is known. The same 200 replicates serve all three checks. Each replicate draws its own split of groups and one noise draw, with the five real estimators present, so these checks are somewhat harder than the main trial, which averages 20 draws. In these checks, the Holm adjustment covers the four candidate components and the added ones.
+
+- **Useless component:** affine predictions shuffled across samples, so they carry no information about the sample.
+- **Planted component:** the affine prediction moved toward the true spectrum by a fraction *a* of its error, for *a* of 0.05, 0.1, 0.2, and 0.5, one at a time.
+- **Two near duplicates:** two planted components with *a* of 0.5, each with independent noise of SD 0.005 per band. Reported: how often at least one passes when each is removed alone, and how often the pair passes when the two are removed together.
+
+*The rule is called usable here if the useless component passes in at most 5% of replicates and the planted component with a of 0.2 passes in at least 80%.* If the rule is not usable, the verdicts on the real components are reported with that statement and are not called findings. If the near duplicates pass alone in fewer than half of the replicates, the polynomial and kernel estimators are also tested as a pair removed together, and that result is reported as exploratory.
+
+### One added screen color
+
+- Arms: flash plus one medium screen color (red, green, or blue, as defined in Q4), with exposure matched to flash and screen noise multiplied by 3, estimated by affine ridge on the six numbers.
+- Forward-model choice: the color with the lowest predicted mean squared error over the 27 bands, computed from the development half and the camera and light curves. The choice is written to the results file before any held-out error is computed.
+- Simple rule: always blue, a fixed choice made here without any calculation.
+
+*The forward-model choice passes if it is not blue and its held-out error is lower than blue's, with the interval above zero.* Each color is also reported against flash alone under the rule in Q4.
+
+### Shot-noise check
+
+The estimator trial and the screen-color comparison are repeated with photos simulated under signal-dependent noise: read noise of SD 0.002, a shot-noise factor of 0.0065 (so the total at a signal of 0.5 equals the moderate additive noise), gain error of 2%, and 12-bit rounding. The forward-model estimator keeps the moderate noise in its own model. *A verdict is called robust to the noise model if it is the same under both.*
+
+### Limits stated in advance
+
+- This is a simulation on spectra already used in Q1 to Q7, with one split.
+- Intervals are pointwise 95% intervals. Only the unique-gain p-values are Holm-adjusted.
+- Admission by unique gain can reject each of two useful components that overlap. The near-duplicate check measures how often that happens here.
+- If the checks of the rule would take more than about 30 minutes of computing, the replicate count is reduced before any result is read, and the reduction is listed under Deviations.
+
 ## Deviations
 
 Added before the first run, with no results seen:
