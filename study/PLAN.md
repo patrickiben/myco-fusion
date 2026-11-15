@@ -160,6 +160,23 @@ The estimator trial and the screen-color comparison are repeated with photos sim
 - Admission by unique gain can reject each of two useful components that overlap. The near-duplicate check measures how often that happens here.
 - If the checks of the rule would take more than about 30 minutes of computing, the replicate count is reduced before any result is read, and the reduction is listed under Deviations.
 
+### Details fixed before the run
+
+Written on 2026-11-14, after the code in `study/admission_trial.py` was built and tested on synthetic numbers, and before any part of the trial or its checks was run. They settle points the text above leaves open and change no rule.
+
+- **Split.** The study's group-balancing function assigns whole groups to two halves with seed 20261114, and the first half is development. Development is split into five folds by group for the out-of-fold predictions. Inside every fit, penalties and settings are chosen by the study's own four-fold search.
+- **Smoothing ridge.** `fit_smooth_tm` as written, which penalizes the second differences of every row of the fitted map, including the constant row. The ridge penalty grid is the study's.
+- **Forward-model estimator.** The description of spectra and the photo prediction use the 5 nm simulation grid from 400 to 700 nm, and the estimate is read on the 27 bands. The gain error enters its noise as 2% of the observed photo, shared by the three channels. The part of a spectrum outside the k directions enters as noise through the camera and light curves. The number of directions is the one with the lowest mean MAE over the four folds.
+- **Combination weights.** Found by an exact search over every subset of the estimators.
+- **Best single estimator.** Chosen in each noise draw by its out-of-fold development MAE.
+- **Bootstrap.** One set of 2,000 resamples of held-out groups serves every contrast within an analysis, and each check replicate draws its own set.
+- **Corruptions.** A new random order is drawn in each noise draw and applied separately to the development and held-out predictions. The reflection uses the mean development spectrum on the 27 bands.
+- **Checks of the rule.** Condition 1 is checked once for the whole run, not in each replicate. Besides the full rule, the pass rate of each condition, and of conditions 2 and 3 together, is reported. Condition 4 alone rejects the useless component and passes the planted ones, so the rate for conditions 2 and 3 is the one that tests the statistics. For the pair, condition 2 removes both together, with the pair and the four candidates as the Holm family; condition 3 corrupts both together; and condition 4 requires each member to outperform affine ridge.
+- **Screen colors.** The flash photo of each draw is reused, and one screen photo is added. The forward-model choice uses the best linear estimate from the full development covariance, with the moderate noise and its gain term, and with the additive noise tripled for the screen photo.
+- **Shot-noise check.** Photos come from `myco_fusion.sensor.simulate_sensor`, which clips values to the range 0 to 1 before the 12-bit rounding. For screen photos, the read and shot noise are tripled and the gain error is not, as in the study's rule.
+- **Frozen items.** The files are `results/study.json`, `results/coverage.json`, `results/phone_power.json`, and `myco_fusion/data/findings.json`. Each must match its committed copy before and after the run, the draft targets must still be an angle of 10° and an MAE of 0.05, and the test suite runs after the trial.
+- **Commands.** `python -m study.admission_trial checks` writes `results/admission_rule_checks.json`. `python -m study.admission_trial trial` refuses to run until that file exists and writes `results/admission_trial.json`.
+
 ## Deviations
 
 Added before the first run, with no results seen:
