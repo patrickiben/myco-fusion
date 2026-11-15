@@ -25,8 +25,134 @@ SOURCES = [
 ]
 
 
+ADMISSION = ROOT / "results" / "admission_trial.json"
+ADMISSION_CHECKS = ROOT / "results" / "admission_rule_checks.json"
+PART_LABELS = {"polynomial": "Polynomial fit", "kernel": "Kernel fit", "smoothing": "Linear fit with a smoothness penalty",
+               "forward_model": "Forward model from the camera and flash curves"}
+
+
 def pct(value, digits=0):
     return f"{100 * value:.{digits}f}"
+
+
+def signed(value, digits):
+    """A number with a true minus sign and no minus zero."""
+    text = f"{value:.{digits}f}"
+    if float(text) == 0:
+        text = f"{0:.{digits}f}"
+    return text.replace("-", "−")
+
+
+def diff_text(contrast, digits=6):
+    """A mean difference in MAE with its 95% interval."""
+    return f"{signed(contrast['mean'], digits)} ({signed(contrast['low'], digits)} to {signed(contrast['high'], digits)})"
+
+
+def load_admission():
+    """The admission trial's results and the summary of its rule checks (study/admission_trial.py)."""
+    checks = json.loads(ADMISSION_CHECKS.read_text())
+    return {"trial": json.loads(ADMISSION.read_text()), "checks": checks["summary"], "replicates": checks["settings"]["replicates"]}
+
+
+def check_admission_claims(a):
+    """Fail loudly if the admission trial's results stop supporting what finding 10 says."""
+    trial, checks = a["trial"], a["checks"]
+    moderate, shot = trial["moderate_noise"], trial["shot_noise"]
+    parts, systems = moderate["components"], moderate["systems"]
+    forward_alone = parts["forward_model"]["better_than_affine"]["forward_model"]
+    checks_ = {
+        "the checks found the rule usable": checks["usability"]["rule_usable"] and trial["rule_checks"]["rule_usable"],
+        "the useless part never passed": checks["useless"]["passes"]["rate"] == 0,
+        "earlier results and targets stayed unchanged": trial["condition_1"]["passes"],
+        "only the kernel fit passed": {name for name, row in parts.items() if row["passes"]} == {"kernel"},
+        "the kernel fit's median gain is far below the 10% bar": parts["kernel"]["median_mae_change_percent_vs_affine"] < 1 and not parts["kernel"]["practically_useful"],
+        "the kernel fit helped mainly the hardest samples": systems["alone:kernel"]["p90_mae"] < 0.9 * systems["alone:affine"]["p90_mae"],
+        "the polynomial fit beat the linear fit alone but added nothing in the combination": parts["polynomial"]["condition_4"] and not parts["polynomial"]["condition_2"],
+        "removing the polynomial and kernel fits together hurt": moderate["polynomial_and_kernel_removed_together"]["unique_gain_unadjusted"]["low"] > 0,
+        "the smoothness penalty changed nothing": abs(parts["smoothing"]["median_mae_change_percent_vs_affine"]) < 0.5 and not parts["smoothing"]["passes"],
+        "the forward model matched the linear fit": forward_alone["low"] <= 0 <= forward_alone["high"] and not parts["forward_model"]["passes"],
+        "another camera's curves made the forward model worse": moderate["forward_model_wrong_camera_minus_right"]["low"] > 0,
+        "the combination beat the best single estimator only under the study's noise model": moderate["combination"]["passes"] and not shot["combination"]["passes"],
+        "the forward model chose red, and red beat blue under both noise models": trial["screen_choice"]["choice"] == "red" and moderate["screen_choice"]["passes"] and shot["screen_choice"]["passes"],
+        "no single screen color cleared the 20% bar": not any(row["q4_statistic_vs_flash"]["helps_under_q4_rule"] for run in (moderate, shot) for row in run["screen_colors"].values()),
+        "every part's verdict was the same under both noise models": all(trial["robust_to_noise_model"][name] for name in parts),
+    }
+    failed = [claim for claim, holds in checks_.items() if not holds]
+    if failed:
+        raise SystemExit("Admission results no longer support: " + "; ".join(failed))
+
+
+def admission_numbers(a, s):
+    trial = a["trial"]
+    moderate = trial["moderate_noise"]
+    parts, systems = moderate["components"], moderate["systems"]
+    return {
+        "draws": len(trial["weights_by_draw"]["moderate"]),
+        "planted": pct(a["checks"]["planted_0.2"]["passes"]["rate"]),
+        "kernel_median": signed(parts["kernel"]["median_mae_change_percent_vs_affine"], 1),
+        "kernel_p90": f"{100 * (1 - systems['alone:kernel']['p90_mae'] / systems['alone:affine']['p90_mae']):.0f}",
+        "q1_gain": f"{s['q1']['natural']['nonlinear_gain']['percent']:.0f}",
+        "pair": diff_text(moderate["polynomial_and_kernel_removed_together"]["unique_gain_unadjusted"]),
+        "wrong_camera": f"{100 * (systems['alone:forward_model_wrong_camera']['mean_mae'] / systems['alone:forward_model']['mean_mae'] - 1):.0f}",
+        "combination": diff_text(moderate["combination"]["vs_best_single"]),
+        "red_vs_blue": diff_text(moderate["screen_choice"]["vs_blue"]),
+    }
+
+
+def admission_finding(a, s):
+    trial = a["trial"]
+    moderate = trial["moderate_noise"]
+    parts, systems = moderate["components"], moderate["systems"]
+    n = admission_numbers(a, s)
+    chart_rows = [("Linear fit (reference)", "alone:affine"), ("Polynomial fit", "alone:polynomial"), ("Kernel fit", "alone:kernel"),
+                  ("Smoothness penalty", "alone:smoothing"), ("Forward model", "alone:forward_model"),
+                  ("Forward model, wrong camera", "alone:forward_model_wrong_camera"), ("Combination of the five", "combination")]
+    return {
+        "id": "admission",
+        "title": "Of four added parts, only a nonlinear fit passed the admission test, and it helped mainly the hardest samples",
+        "body": [
+            f"A later test, added to the plan and fixed before it ran, asked whether four parts improve the one-photo estimate: a kernel fit, a polynomial fit, a linear fit with a smoothness penalty across bands, and a forward model that works out the spectrum from the camera's and flash's measured curves. Half of the natural-object samples were used for fitting and half for scoring, over {n['draws']} noise draws. To pass, a part had to meet four conditions: removing it from a weighted combination of all five estimators made held-out error worse, after a correction for testing four parts; scrambling its predictions did not help; it beat the linear fit on its own; and the earlier results stayed unchanged. Run {a['replicates']} times on parts of known value, the test never passed a useless part and passed one that removed a fifth of the linear fit's error in {n['planted']}% of runs.",
+            f"Only the kernel fit passed. Its median error was {n['kernel_median']}% lower than the linear fit's, far below the study's 10% bar for a useful gain, while its 90th percentile error was {n['kernel_p90']}% lower. In finding 4, where five-fold cross-validation let each fit use four-fifths of the samples, the same kind of fit lowered median MAE by {n['q1_gain']}%. With half the samples, that median gain nearly vanished, most likely because of the smaller fitting set, which was not tested. The polynomial fit beat the linear fit on its own but added nothing once the kernel fit was in the combination; removing both together, a check outside the plan, raised the combination's mean MAE by {n['pair']}. The smoothness penalty changed nothing. The forward model matched the linear fit, and with another camera's curves, its mean error rose {n['wrong_camera']}%.",
+            f"Combining all five estimators with fitted weights beat the best single estimator under the study's noise model, lowering mean MAE by {n['combination']}, but not when the noise grew with the signal, so that result is not settled. The forward model also predicted which single screen color, added to the flash, would help most: red. Red beat a fixed choice of blue under both noise models, lowering mean MAE by {n['red_vs_blue']} under the study's, yet no single screen color cleared the study's 20% bar against flash alone at the median.",
+        ],
+        "caveat": "This test reused the natural objects from the findings above, scored one split of them, and used simulated photos. A part that passes is an offline result only, and nothing was added to the app. The plan's addendum lists every rule, and its deviations list one rounding defect in the test's own checks, found and fixed before the trial ran.",
+        "chart": {
+            "type": "dots", "title": "Held-out error by estimator, lower is better", "digits": 4, "min": 0,
+            "series": [{"key": "median", "label": "Median MAE"}, {"key": "p90", "label": "90th percentile MAE"}],
+            "rows": [{"label": label, "values": {"median": systems[key]["median_mae"], "p90": systems[key]["p90_mae"]}} for label, key in chart_rows],
+        },
+        "table": {
+            "title": "The four parts against the admission test",
+            "headers": ["Part", "Removed from the combination: rise in mean MAE (95% interval)", "Alone, against the linear fit: drop in mean MAE (95% interval)", "Drop in median MAE against the linear fit", "Passed", "Same verdict with noise that grows with the signal"],
+            "rows": [[label, diff_text(parts[name]["unique_gain"]), diff_text(parts[name]["better_than_affine"][name]),
+                      f"{signed(parts[name]['median_mae_change_percent_vs_affine'], 1)}%", "Yes" if parts[name]["passes"] else "No",
+                      "Yes" if trial["robust_to_noise_model"][name] else "No"] for name, label in PART_LABELS.items()],
+        },
+    }
+
+
+def admission_test_rows(a):
+    trial, checks, runs = a["trial"], a["checks"], a["replicates"]
+    moderate = trial["moderate_noise"]
+    useless, planted = checks["useless"]["passes"]["rate"], checks["planted_0.2"]["passes"]["rate"]
+    held = "Natural objects, held-out half"
+    rows = [
+        ["Admission trial", f"Rule check, {runs} runs", "A useless part passes the test", f"{pct(useless)}% of runs", "At most 5%", "Met" if useless <= 0.05 else "Not met"],
+        ["Admission trial", f"Rule check, {runs} runs", "A part that removes a fifth of the linear fit's error passes", f"{pct(planted)}% of runs", "At least 80%", "Met" if planted >= 0.8 else "Not met"],
+    ]
+    for name, label in PART_LABELS.items():
+        row = moderate["components"][name]
+        rows.append(["Admission trial", held, f"{label}: rise in mean MAE when removed from the combination", diff_text(row["unique_gain"]),
+                     "Interval above 0 after a correction for four tests, and the other three conditions", "Met" if row["passes"] else "Not met"])
+    kernel = moderate["components"]["kernel"]
+    rows.append(["Admission trial", held, "Kernel fit: drop in median MAE against the linear fit", f"{signed(kernel['median_mae_change_percent_vs_affine'], 1)}%", "More than 10%", "Met" if kernel["practically_useful"] else "Not met"])
+    rows.append(["Admission trial", held, "Combination of five against the best single estimator: drop in mean MAE", diff_text(moderate["combination"]["vs_best_single"]), "Interval above 0", "Met" if moderate["combination"]["passes"] else "Not met"])
+    choice = moderate["screen_choice"]
+    rows.append(["Admission trial", held, f"Screen color chosen by the forward model ({choice['choice']}) against always blue: drop in mean MAE",
+                 diff_text(choice["vs_blue"]) if "vs_blue" in choice else "Chose blue", "Not blue, and interval above 0", "Met" if choice["passes"] else "Not met"])
+    same, total = sum(trial["robust_to_noise_model"].values()), len(trial["robust_to_noise_model"])
+    rows.append(["Admission trial", "Noise that grows with the signal", "Verdicts unchanged from the study's noise model", f"{same} of {total}", "Same verdict under both", f"{same} of {total}"])
+    return rows
 
 
 def drop_text(reduction):
@@ -119,8 +245,8 @@ def interval_text(reduction):
     return f"{drop_text(reduction)}"
 
 
-def all_tests_table(s):
-    """Every pre-stated test by dataset, whatever the result, plus every sensitivity row."""
+def all_tests_table(s, a):
+    """Every pre-stated test by dataset, whatever the result, plus every sensitivity row and the admission trial."""
     rows = []
     for name in ("natural", "mushrooms", "mixed"):
         entry = s["q1"][name]
@@ -154,12 +280,14 @@ def all_tests_table(s):
         for key, label in (("similar_objects", "calibrated on similar objects"), ("chart_only", "chart only")):
             reduction = entry[f"flash_plus_screen_{key}"]["reduction_vs_flash"]
             rows.append(["Q7 iPhones", phone, f"Flash plus screen against flash, {label}", drop_text(reduction), "At least 20%, interval above 0", "Met" if reduction["helps"] else "Not met"])
+    rows += admission_test_rows(a)
     return {"title": "Every pre-stated test, whatever the result",
-            "note": "Drops are the median per-sample drop in MAE as a percent of the baseline median, with a 95% cluster bootstrap interval. Q1 uses the drop in the median itself, as its rule is written. A negative drop means the arm did worse.",
+            "note": "Drops are the median per-sample drop in MAE as a percent of the baseline median, with a 95% cluster bootstrap interval. Q1 uses the drop in the median itself, as its rule is written. A negative drop means the arm did worse. Admission-trial rows give the mean per-sample difference in MAE, with a 95% interval from resampling held-out groups.",
             "headers": ["Question", "Test set", "Comparison", "Result (95% interval)", "Rule", "Outcome"], "rows": rows}
 
 
-def build(s, c):
+def build(s, c, a=None):
+    a = a if a is not None else load_admission()
     natural = s["q1"]["natural"]
     mixed = s["q1"]["mixed"]
     mushrooms = s["q1"]["mushrooms"]
@@ -208,6 +336,7 @@ def build(s, c):
         "answer": [
             "A phone camera records three numbers per pixel, so it cannot measure a 27-band spectrum directly. This study asks how well a calibrated camera could estimate one, by simulating cameras on real measured reflectance. The main results use a DSLR's measured color curves, and measured curves from six iPhones, up to the 12 Pro Max, gave similar answers.",
             f"With calibration on hundreds of similar objects measured by spectrometer, {pct(natural['affine']['share_within_targets'])}% of 532 samples of natural objects met both draft targets. With only a 24-patch color chart, {pct(q2['natural_all']['chart']['share_within_targets'])}% did. When the light changed and nothing corrected for it, {pct(min(none_shares))}–{pct(max(none_shares))}% did, and a white reference card brought that back to {pct(min(white_shares))}–{pct(max(white_shares))}%. Using a screen as an extra light added almost nothing at the median. With the iPhone curves, the first two figures were {span(phone_similar)}% and {span(phone_chart)}%.",
+            f"A later test, fixed before it ran, checked four added parts and a weighted combination of estimators. One part was a forward model built from the camera's and flash's curves. Only a nonlinear fit passed, and it lowered the median error by just {admission_numbers(a, s)['kernel_median']}%, far below the study's 10% bar.",
         ],
         "safety": "No phone photo and no wild fungus was tested. Never use this to decide whether a mushroom is safe to eat.",
         "tiles": [
@@ -356,7 +485,7 @@ def build(s, c):
                 },
             },
         ],
-        "all_tests": all_tests_table(s),
+        "all_tests": all_tests_table(s, a),
         "limits_title": "What this does not show",
         "limits": [
             "No phone photo was used. RGB values are simulated from the measured curves of two DSLRs and six iPhones, none newer than the 12 Pro Max.",
@@ -374,7 +503,7 @@ def build(s, c):
             "Measure a current iPhone's color curves and its flash spectrum, and repeat this study with them.",
             "Pair phone photos with spectrometer readings of the same marked spots, starting with stable matte targets. Only that can test spectral accuracy.",
         ],
-        "plan_note": "The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. No human expert has reviewed this work yet.",
+        "plan_note": "The analysis plan was written before the natural-object and mushroom results were computed. It has no independent timestamp. A separate AI code review of the first full run found a flaw in how screen light was modeled, which erased most of the first reported gain. That and every other change are listed at the end of study/PLAN.md. Finding 10 comes from an addendum to that plan, fixed before it ran. No human expert has reviewed this work yet.",
         "sources": SOURCES,
         "metamer": {
             "bands_nm": pair["bands_nm"], "spectrum_a": pair["spectrum_a"], "spectrum_b": pair["spectrum_b"],
@@ -383,6 +512,7 @@ def build(s, c):
             "description": "Measured reflectance of a purple plum and a black tourmaline stone. Under a simulated flash and the study's Nikon sensitivity, their RGB values are nearly the same.",
         },
     }
+    data["findings"].append(admission_finding(a, s))
     return data
 
 
@@ -498,7 +628,9 @@ def main():
     study = json.loads((ROOT / "results" / "study.json").read_text())
     coverage = json.loads((ROOT / "results" / "coverage.json").read_text())
     check_claims(study, coverage)
-    data = build(study, coverage)
+    admission = load_admission()
+    check_admission_claims(admission)
+    data = build(study, coverage, admission)
     PACKAGE_DATA.write_text(json.dumps(data, ensure_ascii=False, indent=1, allow_nan=False) + "\n", encoding="utf-8")
     write_markdown(data)
     write_phone_doc()

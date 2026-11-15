@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from myco_fusion.data import findings
-from study.build_report import build, check_claims
+from study.build_report import build, check_admission_claims, check_claims, load_admission
 
 ROOT = Path(__file__).resolve().parent.parent
 TEXT_SUFFIXES = {".md", ".py", ".js", ".html", ".css", ".json", ".yml", ".toml", ".txt", ".cff", ".command"}
@@ -30,6 +30,9 @@ class FindingsTests(unittest.TestCase):
 
     def test_results_still_support_the_written_claims(self):
         check_claims(self.study, self.coverage)
+
+    def test_admission_results_still_support_finding_10(self):
+        check_admission_claims(load_admission())
 
     def test_packaged_findings_match_the_results_files(self):
         self.assertEqual(findings(), json.loads(json.dumps(build(self.study, self.coverage), ensure_ascii=False)))

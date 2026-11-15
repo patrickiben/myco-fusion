@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Component admission trial (2026-11-14).** A plan addendum, approved and committed before it ran, tested whether four added estimators improve the one-photo estimate: a polynomial fit, a kernel fit, a linear fit with a smoothness penalty, and a forward model from the camera and flash curves. It also tested a weighted combination of estimators and a forward-model choice of screen color. Checks of the admission rule on parts of known value ran first; one rounding defect in those checks was fixed and recorded under Deviations before the trial. Only the kernel fit passed, and its median gain was far below the 10% bar. Code in `study/admission_trial.py`, results in `results/admission_rule_checks.json` and `results/admission_trial.json`, and finding 10 on the Findings page.
+- Added `fit_smooth_tm` (a second-difference smoothness penalty) to `myco_fusion.spectra`, and `myco_fusion.sensor` (signal-dependent sensor noise, a cross-polarization model and photo-reading helpers). Both were written in an earlier session and checked here; the trial uses them.
+
 ## 0.3.1
 
 - Repeated the study with measured sensitivities of six iPhones, up to the 12 Pro Max (plan addendum, Q7). Results stayed close to the DSLR's.
