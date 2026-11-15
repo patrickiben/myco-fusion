@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from myco_fusion.spectra import apply_tm, fit_tm, spectral_angle
+from myco_fusion.spectra import apply_tm, fit_smooth_tm, fit_tm, second_derivative_matrix, spectral_angle
 
 
 class SpectraTests(unittest.TestCase):
@@ -15,6 +15,26 @@ class SpectraTests(unittest.TestCase):
         unseen = rng.uniform(0.1, 0.8, (8, 3))
         expected = np.column_stack((unseen, np.ones(len(unseen)))) @ truth
         np.testing.assert_allclose(apply_tm(unseen, fitted), expected, atol=1e-12)
+
+    def test_smooth_affine_map_reduces_curvature(self):
+        rng = np.random.default_rng(42)
+        rgb = rng.uniform(0.1, 0.8, (25, 3))
+        reference = rng.uniform(0.1, 0.9, (25, 27))
+
+        w_std = fit_smooth_tm(rgb, reference, alpha=1e-4, beta=0.0)
+        w_smooth = fit_smooth_tm(rgb, reference, alpha=1e-4, beta=0.05)
+
+        # beta=0 matches standard fit_tm
+        np.testing.assert_allclose(w_std, fit_tm(rgb, reference, alpha=1e-4), atol=1e-10)
+
+        # Smooth fit has lower second derivative energy across predicted bands
+        d2 = second_derivative_matrix(27)
+        pred_std = np.column_stack((rgb, np.ones(len(rgb)))) @ w_std
+        pred_smooth = np.column_stack((rgb, np.ones(len(rgb)))) @ w_smooth
+
+        rough_std = np.sum((pred_std @ d2.T) ** 2)
+        rough_smooth = np.sum((pred_smooth @ d2.T) ** 2)
+        self.assertLess(rough_smooth, rough_std)
 
     def test_predictions_are_not_clipped(self):
         weights = np.zeros((4, 27))
